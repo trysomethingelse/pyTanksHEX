@@ -15,7 +15,7 @@ if(__name__ == "__main__"):
     while True:
 
         oldTankPos = myTank.position
-        map.plane[myTank.position[0], myTank.position[1]] = map.EMPTY  # usuwanie czolgu
+
 
         key = input()
         if key == 'w':
@@ -34,11 +34,18 @@ if(__name__ == "__main__"):
             myTank.shoot()
 
 
+        #wychodzneie poza mapę
         if myTank.position[0] < 0 or myTank.position[1] < 0 or myTank.position[0] >= map.HEIGHT or myTank.position[
             1] >= map.WIDTH:
             myTank.position = oldTankPos
 
+        #kolizja z przeszkoda
+
+
+
+        map.plane[oldTankPos[0],oldTankPos[1]] = map.EMPTY  # usuwanie czolgu ze starej pozycji
         map.plane[myTank.position[0], myTank.position[1]] = map.AGENT  # dodawanie czolgu
+
         map.toConsole()
 
         print("rotacja: ",myTank.rotation)

@@ -16,6 +16,7 @@ class mapGenerator:
 
     def generate(self):
         self.plane[5,5] = self.AGENT
+        self.plane[0,0] = self.ENEMY
 
     def toConsole(self):
         print(self.plane)

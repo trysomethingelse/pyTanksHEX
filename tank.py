@@ -14,10 +14,12 @@ class tank:
         return True
 
     def move(self,direction): #direction 1-przód, -1 tył
-        if self.position[1] % 2 == 0: #dla parzystych wierszy
-            self.position = np.add(self.position,np.multiply(direction,self.availableMoveForEven[self.rotation]))
+        if direction == -1: self.rotate(3)#rotacja w przeciwna strone
+        if self.position[0] % 2 == 0: #dla parzystych wierszy
+            self.position = np.add(self.position,self.availableMoveForEven[self.rotation])
         else:
-            self.position = np.add(self.position, np.multiply(direction, self.availableMoveForOdd[self.rotation]))
+            self.position = np.add(self.position, self.availableMoveForOdd[self.rotation])
+        if direction == -1: self.rotate(3)#przywrócenie poczatkowego ustawienia
 
         return True
     def shoot(self):
