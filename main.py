@@ -33,13 +33,14 @@ if(__name__ == "__main__"):
         elif key == 'p':
             myTank.shoot()
 
+        onTile = map.plane[myTank.position[0], myTank.position[1]] # co jest na danej plytce
 
-        #wychodzneie poza mapę
+        #wychodzneie poza mapę i jesli kolizja z przeszkoda
         if myTank.position[0] < 0 or myTank.position[1] < 0 or myTank.position[0] >= map.HEIGHT or myTank.position[
-            1] >= map.WIDTH:
+            1] >= map.WIDTH or onTile != map.EMPTY:
             myTank.position = oldTankPos
 
-        #kolizja z przeszkoda
+
 
 
 
