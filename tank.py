@@ -9,7 +9,7 @@ class Tank:
         [[-1, -1], [-2, 0], [-1, 0], [1, 0], [2, 0], [1, -1]])  # dla przystych kolumn w tablicy
     availableMoveForOdd = np.array([[-1, 0], [-2, 0], [-1, 1], [1, 1], [2, 0], [1, 0]])
     health = 100
-    myBullet = Bullet()
+    # myBullet = Bullet()
 
     def rotate(self, value):  # value 1 prawo, -1 lewo
         self.rotation += value
@@ -27,16 +27,16 @@ class Tank:
 
         return True
 
-    def shoot(self):
-        myBullet = Bullet()
-        myBullet.position = self.position  # pozycja pocisku to pozycja czolgu
-        myBullet.rotation = self.rotation
-        myBullet.exist = True
-        return True
+    # def shoot(self):
+    #     myBullet = self.Bullet()
+    #     myBullet.position = self.position  # pozycja pocisku to pozycja czolgu
+    #     myBullet.rotation = self.rotation
+    #     myBullet.exist = True
+    #     return True
 
 
-class Bullet:
-    position = np.array([0,0])
+class Bullet(Tank):
+    position = np.array([0, 0])
     rotation = 0
     exist = False
 
