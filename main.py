@@ -1,15 +1,54 @@
 from mapGenerator import MapGenerator
 from tank import Tank,Bullet
 
+from PyQt5.QtCore import QObject
+from PyQt5.uic import loadUi
+from PyQt5.QtWidgets import *
+from PyQt5 import QtGui, QtCore,QtSvg
+
+import sys
+
+
+class TanksWindow(QDialog):
+
+    def __init__(self):
+        QMainWindow.__init__(self)
+        self.ui = loadUi('./gui.ui',self)
+        self.setWindowTitle('pyTanksHEX')
+        # self.resize(700,700)
+
+    def drawMap(self,map):
+        [startX,startY] = [-self.width()/2,-self.height()/2]
+
+        mapScene = QGraphicsScene(startX,startY,self.width(),self.height())
+        map.graphicMap(mapScene)
+        self.ui.graphicsView.setScene(mapScene)
+
+
+
 if (__name__ == "__main__"):
+
+
     map = MapGenerator()
     map.generate()
-    map.toConsole()
+    # map.toConsole()
+    #gui
+    qApp = QApplication(sys.argv)
+    app = TanksWindow()
+    app.drawMap(map)
+    app.show()
+    sys.exit(qApp.exec_())
+    #koniec gui
+
+
+
+
+
 
     myTank = Tank()
     print("rotacja: ", myTank.rotation)
 
-    while True:
+    while False:
 
         oldTankPos = myTank.position
 
