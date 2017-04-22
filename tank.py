@@ -2,7 +2,8 @@ import numpy as np
 
 
 class Tank:
-    position = np.array([5, 5])
+    position = np.array([5, 5])#pozycja czolgu na mapie
+    oldTankPos = np.array([5, 5])
     rotation = 0  # ktory ruch mozna wykonac znajdujacy sie w available 0-5
 
     availableMoveForEven = np.array(

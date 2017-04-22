@@ -1,7 +1,7 @@
 from mapGenerator import MapGenerator
 from tank import Tank,Bullet
 
-from PyQt5.QtCore import QObject
+from PyQt5.QtCore import QObject,Qt
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui, QtCore,QtSvg
@@ -13,6 +13,10 @@ class TanksWindow(QDialog):
     WINDOW_WIDTH = 620
     WINDOW_HEIGHT = 620
     SCENE_MARGIN = 20 #chroni przed wyświtlaniem scroll bar
+    myTank = Tank()
+    map = MapGenerator()
+
+
 
     def __init__(self):
         QMainWindow.__init__(self)
@@ -20,17 +24,48 @@ class TanksWindow(QDialog):
         self.setWindowTitle('pyTanksHEX')
         self.resize(self.WINDOW_WIDTH,self.WINDOW_HEIGHT)
 
-    def drawMap(self,map):
+    def drawMap(self):
         [startX,startY] = [-self.WINDOW_WIDTH/2,-self.WINDOW_HEIGHT/2]
 
 
         mapScene = QGraphicsScene(startX+self.SCENE_MARGIN,startY+self.SCENE_MARGIN,self.WINDOW_WIDTH-self.SCENE_MARGIN,self.WINDOW_HEIGHT-self.SCENE_MARGIN)
-        self.ui.graphicsView.setGeometry(0,0,self.WINDOW_WIDTH,self.WINDOW_HEIGHT)
-        svgTiles = map.graphicMap(mapScene)
-        # map.changeTile(svgTiles,1,3)
+        map.startX = -mapScene.width()/2
+        map.startY = -mapScene.height()/2
 
+
+        self.ui.graphicsView.setGeometry(0,0,self.WINDOW_WIDTH,self.WINDOW_HEIGHT)
+        self.map.graphicMap(mapScene)
         self.ui.graphicsView.setScene(mapScene)
-        return svgTiles
+        map.planeToGraphics()
+
+    def keyPressEvent(self, event):
+        self.myTank.oldTankPos = self.myTank.position # przepisz pozycje przed aktualizacja
+
+        if event.key() == Qt.Key_W:
+            self.myTank.move(1)
+            # map.changeTile(self.myTank.position[0],self.myTank.position[1])
+
+
+        # wychodzneie poza mapę
+        if self.myTank.position[0] < 0 or self.myTank.position[1] < 0 or self.myTank.position[0] >= self.map.HEIGHT or self.myTank.position[
+            1] >= self.map.WIDTH:
+            self.myTank.position = self.myTank.oldTankPos
+
+        onTile = self.map.plane[self.myTank.position[0], self.myTank.position[1]]  # co jest na danej plytce
+
+        # jesli kolizja z przeszkoda
+        # if onTile != self.map.EMPTY:
+        #     self.myTank.position =  self.myTank.oldTankPos
+
+
+        self.map.plane[self.myTank.oldTankPos[0],  self.myTank.oldTankPos[1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
+        self.map.plane[self.myTank.position[0], self.myTank.position[1]] = self.map.AGENT  # dodawanie czolgu
+
+        print(self.myTank.position)
+
+        map.planeToGraphics()
+        # print("rotacja: ", myTank.rotation)
+
 
 
 if (__name__ == "__main__"):
@@ -43,8 +78,10 @@ if (__name__ == "__main__"):
     #gui
     qApp = QApplication(sys.argv)
     app = TanksWindow()
-    svgTiles = app.drawMap(map)
-    map.planeToGraphics(svgTiles)
+    app.map = map
+    svgTiles = app.drawMap()
+
+    # map.planeToGraphics(svgTiles)
 
 
     app.show()
@@ -112,21 +149,3 @@ if (__name__ == "__main__"):
 
 
 
-        # wychodzneie poza mapę
-        if myTank.position[0] < 0 or myTank.position[1] < 0 or myTank.position[0] >= map.HEIGHT or myTank.position[
-            1] >= map.WIDTH:
-            myTank.position = oldTankPos
-
-        onTile = map.plane[myTank.position[0], myTank.position[1]]  # co jest na danej plytce
-
-        # jesli kolizja z przeszkoda
-        if onTile != map.EMPTY:
-            myTank.position = oldTankPos
-
-
-        map.plane[oldTankPos[0], oldTankPos[1]] = map.EMPTY  # usuwanie czolgu ze starej pozycji
-        map.plane[myTank.position[0], myTank.position[1]] = map.AGENT  # dodawanie czolgu
-
-        map.toConsole()
-
-        print("rotacja: ", myTank.rotation)

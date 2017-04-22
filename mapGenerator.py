@@ -19,7 +19,8 @@ class MapGenerator:
     BULLET = -1
 
     plane = np.zeros([WIDTH, HEIGHT])
-
+    svgHEX =  None
+    startX = 0; startY =0
     def generate(self):
         self.plane[4, :7] = np.ones([1, 7]) * self.DESTR  # pas zniszczalnych plytek
         self.plane[3, 0:3] = np.ones([1, 3]) * self.NONDESTR
@@ -31,13 +32,10 @@ class MapGenerator:
         print(self.plane)
 
     def graphicMap(self,handleScene):
-        svgHEX = [[QtSvg.QSvgWidget() for i in range(0, self.HEIGHT)] for j in range(0, self.WIDTH)]
+        self.svgHEX = [[QtSvg.QSvgWidget() for i in range(0, self.HEIGHT)] for j in range(0, self.WIDTH)]
 
-        [startX,startY] = [-handleScene.width()/2,-handleScene.height()/2]
-
-
-        for index,element in np.ndenumerate(svgHEX):
-            svgHEX[index[0]][index[1]]=QtSvg.QSvgWidget('./images/hex.svg')
+        for index,element in np.ndenumerate(self.svgHEX):
+            self.svgHEX[index[0]][index[1]]=QtSvg.QSvgWidget('./images/hex.svg')
 
             offsetX = 3 / 2 * self.TILE_WIDTH * index[0]
 
@@ -46,20 +44,30 @@ class MapGenerator:
 
             offsetY = index[1] * self.TILE_HEIGHT/2
 
-            svgHEX[index[0]][index[1]].setGeometry(startX+offsetX,
-                                                   startY+offsetY,
+            self.svgHEX[index[0]][index[1]].setGeometry(self.startX+offsetX,
+                                                   self.startY+offsetY,
                                                    self.TILE_WIDTH,
                                                    self.TILE_HEIGHT)#odpowiada za rysowanie płytki w odpowiednim miejscu
-            svgHEX[index[0]][index[1]].setStyleSheet("background-color:transparent;")
-            handleScene.addWidget(svgHEX[index[0]][index[1]])
-        return svgHEX
+            self.svgHEX[index[0]][index[1]].setStyleSheet("background-color:transparent;")
+            handleScene.addWidget(self.svgHEX[index[0]][index[1]])
+     
 
-
-    def changeTile(self,svgHEX,xNo,yNo):
-        svgHEX[xNo][yNo].setStyleSheet("background-color:red;")
-
-    def planeToGraphics(self,svgHEX):
+    def planeToGraphics(self):
         for index, element in np.ndenumerate(self.plane):
+            if element == self.EMPTY:
+                self.svgHEX[index[0]][index[1]].load('./images/hex.svg')
             if element == self.AGENT:
-                # svgHEX[index[0]][index[1]] = QtSvg.QSvgWidget('./images/hexMyTank.svg')
-                self.changeTile(svgHEX,index[0],index[1])
+                self.svgHEX[index[0]][index[1]].load('./images/hexMyTank.svg')
+            if element == self.DESTR:
+                self.svgHEX[index[0]][index[1]].load('./images/hexBrickDestr.svg')
+            if element == self.NONDESTR:
+                self.svgHEX[index[0]][index[1]].load('./images/hexBrickNonDestr.svg')
+
+
+
+
+
+
+
+
+
