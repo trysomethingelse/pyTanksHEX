@@ -10,17 +10,22 @@ import sys
 
 
 class TanksWindow(QDialog):
+    __WINDOW_WIDTH = 600
+    __WINDOW_HEIGHT = 600
+    __SCENE_MARGIN = 20 #chroni przed wyświtlaniem scroll bar
 
     def __init__(self):
         QMainWindow.__init__(self)
         self.ui = loadUi('./gui.ui',self)
         self.setWindowTitle('pyTanksHEX')
-        # self.resize(700,700)
+        self.resize(self.__WINDOW_WIDTH,self.__WINDOW_HEIGHT)
 
     def drawMap(self,map):
-        [startX,startY] = [-self.width()/2,-self.height()/2]
+        [startX,startY] = [-self.__WINDOW_WIDTH/2,-self.__WINDOW_HEIGHT/2]
 
-        mapScene = QGraphicsScene(startX,startY,self.width(),self.height())
+
+        mapScene = QGraphicsScene(startX+self.__SCENE_MARGIN,startY+self.__SCENE_MARGIN,self.__WINDOW_WIDTH-self.__SCENE_MARGIN,self.__WINDOW_HEIGHT-self.__SCENE_MARGIN)
+        self.ui.graphicsView.setGeometry(0,0,self.__WINDOW_WIDTH,self.__WINDOW_HEIGHT)
         map.graphicMap(mapScene)
         self.ui.graphicsView.setScene(mapScene)
 
