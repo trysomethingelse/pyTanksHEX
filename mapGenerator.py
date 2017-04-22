@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui, QtCore,QtSvg
@@ -34,8 +35,20 @@ class MapGenerator:
         [startX,startY] = [-handleScene.width()/2,-handleScene.height()/2]
         # for i in range(0,self.WIDTH):
         #     for k in range(0,self.HEIGHT):
+        offset = math.sqrt(3)+self.WIDTH
+
+        # pal = QPalette(widget.palette())
+        # pal.setColor(QPalette.Window, QColor('white'))
+        # widget.setPalette(pal)
 
         for index,element in np.ndenumerate(svgHEX):
             svgHEX[index[0]][index[1]]=(QtSvg.QSvgWidget('./images/hex.svg'))
-            svgHEX[index[0]][index[1]].setGeometry(startX+index[0]*self.TILE_WIDTH,startY+index[1]*self.TILE_HEIGHT,self.TILE_WIDTH,self.TILE_HEIGHT)
+            if index[1] % 2 == 0 :
+                offset = (math.sqrt(3) + self.WIDTH )* index[0]
+            else:
+                 offset = (math.sqrt(3) + self.WIDTH )* index[0] + math.sqrt(3)*self.WIDTH + self.WIDTH
+
+            svgHEX[index[0]][index[1]].setGeometry(startX+index[0]*self.TILE_WIDTH+offset,startY+index[1]*self.TILE_HEIGHT+index[1]*math.sqrt(3)/2,self.TILE_WIDTH,self.TILE_HEIGHT)
+            svgHEX[index[0]][index[1]].setStyleSheet("background-color:transparent;")
             handleScene.addWidget(svgHEX[index[0]][index[1]])
+         
