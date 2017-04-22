@@ -5,8 +5,8 @@ from PyQt5.QtWidgets import *
 from PyQt5 import QtGui, QtCore,QtSvg
 
 class MapGenerator:
-    WIDTH = 10
-    HEIGHT = 10
+    WIDTH = 8 #liczba plytek
+    HEIGHT = 24
     TILE_WIDTH = 50
     TILE_HEIGHT = 50
 
@@ -21,7 +21,7 @@ class MapGenerator:
     plane = np.zeros([WIDTH, HEIGHT])
 
     def generate(self):
-        self.plane[4, :] = np.ones([1, self.WIDTH]) * self.DESTR  # pas zniszczalnych plytek
+        self.plane[4, :7] = np.ones([1, 7]) * self.DESTR  # pas zniszczalnych plytek
         self.plane[3, 0:3] = np.ones([1, 3]) * self.NONDESTR
 
         self.plane[5, 5] = self.AGENT
@@ -29,30 +29,27 @@ class MapGenerator:
 
     def toConsole(self):
         print(self.plane)
-    def graphicMap(self,handleScene):
-        # svgHEX = np.empty([self.WIDTH,self.HEIGHT])
-        svgHEX = [[QtSvg.QSvgWidget() for i in range(0,self.WIDTH)] for j in range(0,self.HEIGHT)]
-        [startX,startY] = [-handleScene.width()/2,-handleScene.height()/2]
-        # startX = -200
-        # startY = -50
-        # for i in range(0,self.WIDTH):
-        #     for k in range(0,self.HEIGHT):
 
-        # pal = QPalette(widget.palette())
-        # pal.setColor(QPalette.Window, QColor('white'))
-        # widget.setPalette(pal)
+    def graphicMap(self,handleScene):
+        svgHEX = [[QtSvg.QSvgWidget() for i in range(0,self.HEIGHT)] for j in range(0,self.WIDTH)]
+        [startX,startY] = [-handleScene.width()/2,-handleScene.height()/2]
+
 
         for index,element in np.ndenumerate(svgHEX):
             svgHEX[index[0]][index[1]]=(QtSvg.QSvgWidget('./images/hex.svg'))
-            if index[1] % 2 == 0 :
-                offset =  2 * self.WIDTH
-            else:
-                offset = self.WIDTH*2 +  2 * self.WIDTH
+            offsetX = 3 / 2 * self.TILE_WIDTH * index[0]
 
-            # svgHEX[index[0]][index[1]].setGeometry(startX+index[0]*self.TILE_WIDTH+offset,startY+index[1]*self.TILE_HEIGHT+index[1]*math.sqrt(3)/2,self.TILE_WIDTH,self.TILE_HEIGHT)
-            svgHEX[index[0]][index[1]].setGeometry(startX,startY,self.TILE_WIDTH,self.TILE_HEIGHT)
+            if index[1] % 2 == 1 : #przesuniecie o staly offset
+                offsetX += 3/4*self.TILE_WIDTH
+
+            offsetY = index[1] * self.TILE_HEIGHT/2
+
+            svgHEX[index[0]][index[1]].setGeometry(startX+offsetX,
+                                                   startY+offsetY,
+                                                   self.TILE_WIDTH,
+                                                   self.TILE_HEIGHT)#odpowiada za rysowanie płytki w odpowiednim miejscu
             svgHEX[index[0]][index[1]].setStyleSheet("background-color:transparent;")
-            handleScene.addWidget(svgHEX[0][0])
+            handleScene.addWidget(svgHEX[index[0]][index[1]])
 
         # svgHEX[1][3].setStyleSheet("background-color:red;")
 
