@@ -18,6 +18,11 @@ class MapGenerator:
     NONDESTR = -9
     BULLET = -1
 
+
+    def __init__(self):
+        print("init")
+
+
     plane = np.zeros([WIDTH, HEIGHT])
     svgHEX =  None
     startX = 0; startY =0
@@ -25,8 +30,8 @@ class MapGenerator:
         self.plane[4, :7] = np.ones([1, 7]) * self.DESTR  # pas zniszczalnych plytek
         self.plane[3, 0:3] = np.ones([1, 3]) * self.NONDESTR
 
-        self.plane[5, 5] = self.AGENT
-        self.plane[0, 0] = self.ENEMY
+        self.plane[0,0] = self.AGENT
+        # self.plane[0, 0] = self.ENEMY
 
     def toConsole(self):
         print(self.plane)
@@ -35,7 +40,7 @@ class MapGenerator:
         self.svgHEX = [[QtSvg.QSvgWidget() for i in range(0, self.HEIGHT)] for j in range(0, self.WIDTH)]
 
         for index,element in np.ndenumerate(self.svgHEX):
-            self.svgHEX[index[0]][index[1]]=QtSvg.QSvgWidget('./images/hex.svg')
+            self.svgHEX[index[0]][index[1]] = QtSvg.QSvgWidget('./images/hex.svg')
 
             offsetX = 3 / 2 * self.TILE_WIDTH * index[0]
 
@@ -52,12 +57,13 @@ class MapGenerator:
             handleScene.addWidget(self.svgHEX[index[0]][index[1]])
      
 
-    def planeToGraphics(self):
+    def planeToGraphics(self,myTank):
         for index, element in np.ndenumerate(self.plane):
             if element == self.EMPTY:
                 self.svgHEX[index[0]][index[1]].load('./images/hex.svg')
             if element == self.AGENT:
-                self.svgHEX[index[0]][index[1]].load('./images/hexMyTank.svg')
+                fileName = './images/hexMyTank' + str(myTank.rotation) +'.svg'
+                self.svgHEX[index[0]][index[1]].load(fileName)
             if element == self.DESTR:
                 self.svgHEX[index[0]][index[1]].load('./images/hexBrickDestr.svg')
             if element == self.NONDESTR:

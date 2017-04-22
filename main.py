@@ -19,6 +19,7 @@ class TanksWindow(QDialog):
 
 
     def __init__(self):
+        self.map.generate()
         QMainWindow.__init__(self)
         self.ui = loadUi('./gui.ui',self)
         self.setWindowTitle('pyTanksHEX')
@@ -28,92 +29,28 @@ class TanksWindow(QDialog):
         [startX,startY] = [-self.WINDOW_WIDTH/2,-self.WINDOW_HEIGHT/2]
 
 
-        mapScene = QGraphicsScene(startX+self.SCENE_MARGIN,startY+self.SCENE_MARGIN,self.WINDOW_WIDTH-self.SCENE_MARGIN,self.WINDOW_HEIGHT-self.SCENE_MARGIN)
-        map.startX = -mapScene.width()/2
-        map.startY = -mapScene.height()/2
+        self.mapScene = QGraphicsScene(startX+self.SCENE_MARGIN,startY+self.SCENE_MARGIN,self.WINDOW_WIDTH-self.SCENE_MARGIN,self.WINDOW_HEIGHT-self.SCENE_MARGIN)
+        self.map.startX = -self.mapScene.width()/2
+        self.map.startY = -self.mapScene.height()/2
 
 
         self.ui.graphicsView.setGeometry(0,0,self.WINDOW_WIDTH,self.WINDOW_HEIGHT)
-        self.map.graphicMap(mapScene)
-        self.ui.graphicsView.setScene(mapScene)
-        map.planeToGraphics()
+        self.map.graphicMap(self.mapScene)
+        self.ui.graphicsView.setScene(self.mapScene)
+        self.map.planeToGraphics(self.myTank)
 
     def keyPressEvent(self, event):
         self.myTank.oldTankPos = self.myTank.position # przepisz pozycje przed aktualizacja
 
         if event.key() == Qt.Key_W:
             self.myTank.move(1)
-            # map.changeTile(self.myTank.position[0],self.myTank.position[1])
-
-
-        # wychodzneie poza mapę
-        if self.myTank.position[0] < 0 or self.myTank.position[1] < 0 or self.myTank.position[0] >= self.map.HEIGHT or self.myTank.position[
-            1] >= self.map.WIDTH:
-            self.myTank.position = self.myTank.oldTankPos
-
-        onTile = self.map.plane[self.myTank.position[0], self.myTank.position[1]]  # co jest na danej plytce
-
-        # jesli kolizja z przeszkoda
-        # if onTile != self.map.EMPTY:
-        #     self.myTank.position =  self.myTank.oldTankPos
-
-
-        self.map.plane[self.myTank.oldTankPos[0],  self.myTank.oldTankPos[1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
-        self.map.plane[self.myTank.position[0], self.myTank.position[1]] = self.map.AGENT  # dodawanie czolgu
-
-        print(self.myTank.position)
-
-        map.planeToGraphics()
-        # print("rotacja: ", myTank.rotation)
-
-
-
-if (__name__ == "__main__"):
-
-
-    map = MapGenerator()
-    map.generate()
-
-    # map.toConsole()
-    #gui
-    qApp = QApplication(sys.argv)
-    app = TanksWindow()
-    app.map = map
-    svgTiles = app.drawMap()
-
-    # map.planeToGraphics(svgTiles)
-
-
-    app.show()
-    sys.exit(qApp.exec_())
-    #koniec gui
-
-
-
-
-
-
-    myTank = Tank()
-    print("rotacja: ", myTank.rotation)
-
-    while False:
-
-        oldTankPos = myTank.position
-
-        key = input()
-        if key == 'w':
-            myTank.move(1)
-
-        elif key == 's':
-            myTank.move(-1)
-
-        elif key == 'a':
-            myTank.rotate(-1)
-
-        elif key == 'd':
-            myTank.rotate(1)
-
-        elif key == 'x':
+        elif event.key() == Qt.Key_S:
+            self.myTank.move(-1)
+        elif event.key() == Qt.Key_A:
+            self.myTank.rotate(-1)
+        elif event.key() == Qt.Key_D:
+            self.myTank.rotate(1)
+        elif event.key() == Qt.Key_X:
             # myTank.shoot()
             myBullet = Bullet()
             myBullet.position = myTank.position  # pozycja pocisku to pozycja czolgu
@@ -122,8 +59,6 @@ if (__name__ == "__main__"):
 
             while myBullet.exist:
                 myBullet.move(1)
-
-
                 #jesli pocisk wychodzi za mape
                 if myBullet.position[0] < 0 or myBullet.position[1] < 0 or \
                     myBullet.position[0] >= map.HEIGHT or myBullet.position[1] >= map.WIDTH:
@@ -142,6 +77,40 @@ if (__name__ == "__main__"):
                     myBullet.exist = False
                 elif onTile == map.NONDESTR:
                     myBullet.exist = False
+
+
+        # wychodzneie poza mapę
+        if self.myTank.position[0] < 0 or self.myTank.position[1] < 0 or self.myTank.position[0] >= self.map.HEIGHT or self.myTank.position[
+            1] >= self.map.WIDTH:
+            self.myTank.position = self.myTank.oldTankPos
+
+        onTile = self.map.plane[self.myTank.position[0], self.myTank.position[1]]  # co jest na danej plytce
+
+        # jesli kolizja z przeszkoda
+        if onTile != self.map.EMPTY:
+            self.myTank.position =  self.myTank.oldTankPos
+
+
+        self.map.plane[self.myTank.oldTankPos[0],  self.myTank.oldTankPos[1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
+        self.map.plane[self.myTank.position[0], self.myTank.position[1]] = self.map.AGENT  # dodawanie czolgu
+
+        print(self.myTank.position)
+
+        self.map.planeToGraphics(self.myTank)#aktualizacja grafiki
+
+
+
+
+if (__name__ == "__main__"):
+
+    qApp = QApplication(sys.argv)
+    app = TanksWindow()
+    app.drawMap()
+    app.show()
+    sys.exit(qApp.exec_())
+
+
+
 
 
 

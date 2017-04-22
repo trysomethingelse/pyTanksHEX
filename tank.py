@@ -2,13 +2,13 @@ import numpy as np
 
 
 class Tank:
-    position = np.array([5, 5])#pozycja czolgu na mapie
-    oldTankPos = np.array([5, 5])
-    rotation = 0  # ktory ruch mozna wykonac znajdujacy sie w available 0-5
+    position = np.array([0, 0])#pozycja czolgu na mapie
+    oldTankPos = np.array([0, 0])
+    rotation = 1  # ktory ruch mozna wykonac znajdujacy sie w available 0-5
 
     availableMoveForEven = np.array(
-        [[-1, -1], [-2, 0], [-1, 0], [1, 0], [2, 0], [1, -1]])  # dla przystych kolumn w tablicy
-    availableMoveForOdd = np.array([[-1, 0], [-2, 0], [-1, 1], [1, 1], [2, 0], [1, 0]])
+            [[-1, -1], [0,-2], [0,-1], [0, 1], [0, 2], [-1, 1]])  # dla przystych kolumn w tablicy
+    availableMoveForOdd = np.array([[0, -1], [0, -2], [1, -1], [1, 1], [0, 2], [0, 1]])
     health = 100
     # myBullet = Bullet()
 
@@ -20,7 +20,7 @@ class Tank:
 
     def move(self, direction):  # direction 1-przód, -1 tył
         if direction == -1: self.rotate(3)  # rotacja w przeciwna strone gdy cofanie
-        if self.position[0] % 2 == 0:  # dla parzystych wierszy
+        if self.position[1] % 2 == 0:  # dla parzystych wierszy
             self.position = np.add(self.position, self.availableMoveForEven[self.rotation])
         else:
             self.position = np.add(self.position, self.availableMoveForOdd[self.rotation])
