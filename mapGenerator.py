@@ -31,12 +31,14 @@ class MapGenerator:
         print(self.plane)
 
     def graphicMap(self,handleScene):
-        svgHEX = [[QtSvg.QSvgWidget() for i in range(0,self.HEIGHT)] for j in range(0,self.WIDTH)]
+        svgHEX = [[QtSvg.QSvgWidget() for i in range(0, self.HEIGHT)] for j in range(0, self.WIDTH)]
+
         [startX,startY] = [-handleScene.width()/2,-handleScene.height()/2]
 
 
         for index,element in np.ndenumerate(svgHEX):
-            svgHEX[index[0]][index[1]]=(QtSvg.QSvgWidget('./images/hex.svg'))
+            svgHEX[index[0]][index[1]]=QtSvg.QSvgWidget('./images/hex.svg')
+
             offsetX = 3 / 2 * self.TILE_WIDTH * index[0]
 
             if index[1] % 2 == 1 : #przesuniecie o staly offset
@@ -50,6 +52,14 @@ class MapGenerator:
                                                    self.TILE_HEIGHT)#odpowiada za rysowanie płytki w odpowiednim miejscu
             svgHEX[index[0]][index[1]].setStyleSheet("background-color:transparent;")
             handleScene.addWidget(svgHEX[index[0]][index[1]])
+        return svgHEX
 
-        # svgHEX[1][3].setStyleSheet("background-color:red;")
 
+    def changeTile(self,svgHEX,xNo,yNo):
+        svgHEX[xNo][yNo].setStyleSheet("background-color:red;")
+
+    def planeToGraphics(self,svgHEX):
+        for index, element in np.ndenumerate(self.plane):
+            if element == self.AGENT:
+                # svgHEX[index[0]][index[1]] = QtSvg.QSvgWidget('./images/hexMyTank.svg')
+                self.changeTile(svgHEX,index[0],index[1])

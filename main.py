@@ -26,9 +26,11 @@ class TanksWindow(QDialog):
 
         mapScene = QGraphicsScene(startX+self.SCENE_MARGIN,startY+self.SCENE_MARGIN,self.WINDOW_WIDTH-self.SCENE_MARGIN,self.WINDOW_HEIGHT-self.SCENE_MARGIN)
         self.ui.graphicsView.setGeometry(0,0,self.WINDOW_WIDTH,self.WINDOW_HEIGHT)
-        map.graphicMap(mapScene)
-        self.ui.graphicsView.setScene(mapScene)
+        svgTiles = map.graphicMap(mapScene)
+        # map.changeTile(svgTiles,1,3)
 
+        self.ui.graphicsView.setScene(mapScene)
+        return svgTiles
 
 
 if (__name__ == "__main__"):
@@ -36,11 +38,15 @@ if (__name__ == "__main__"):
 
     map = MapGenerator()
     map.generate()
+
     # map.toConsole()
     #gui
     qApp = QApplication(sys.argv)
     app = TanksWindow()
-    app.drawMap(map)
+    svgTiles = app.drawMap(map)
+    map.planeToGraphics(svgTiles)
+
+
     app.show()
     sys.exit(qApp.exec_())
     #koniec gui
