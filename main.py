@@ -80,8 +80,8 @@ class TanksWindow(QDialog):
 
 
         # wychodzneie poza mapę
-        if self.myTank.position[0] < 0 or self.myTank.position[1] < 0 or self.myTank.position[0] >= self.map.HEIGHT or self.myTank.position[
-            1] >= self.map.WIDTH:
+        if self.myTank.position[0] < 0 or self.myTank.position[1] < 0 or self.myTank.position[1] >= self.map.HEIGHT or self.myTank.position[
+            0] >= self.map.WIDTH:
             self.myTank.position = self.myTank.oldTankPos
 
         onTile = self.map.plane[self.myTank.position[0], self.myTank.position[1]]  # co jest na danej plytce
@@ -96,8 +96,8 @@ class TanksWindow(QDialog):
 
         print(self.myTank.position)
 
-        self.map.planeToGraphics(self.myTank)#aktualizacja grafiki
-
+        # self.map.planeToGraphics(self.myTank)#aktualizacja grafiki
+        self.map.myTankRefresh(self.myTank)
 
 
 

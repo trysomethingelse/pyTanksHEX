@@ -69,6 +69,10 @@ class MapGenerator:
             if element == self.NONDESTR:
                 self.svgHEX[index[0]][index[1]].load('./images/hexBrickNonDestr.svg')
 
+    def myTankRefresh(self,myTank):
+        fileName = './images/hexMyTank' + str(myTank.rotation) + '.svg'
+        self.svgHEX[myTank.oldTankPos[0]][myTank.oldTankPos[1]].load('./images/hex.svg')
+        self.svgHEX[myTank.position[0]][myTank.position[1]].load(fileName)
 
 
 
