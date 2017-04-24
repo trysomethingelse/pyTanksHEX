@@ -5,12 +5,13 @@ from random import randint
 from mapGenerator import MapGenerator
 from tank import MovableObject, Bullet
 
-from PyQt5.QtCore import QObject, Qt,QTimer
+from PyQt5.QtCore import QObject, Qt, QTimer
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui, QtCore, QtSvg
 
 import sys
+
 
 class TanksWindow(QDialog):
     WINDOW_WIDTH = 620
@@ -18,18 +19,11 @@ class TanksWindow(QDialog):
     SCENE_MARGIN = 20  # chroni przed wyświtlaniem scroll bar
 
     myTank = MovableObject()
-    myEnemies = [] #tablica wrogów
+    myEnemies = []  # tablica wrogów
     map = MapGenerator()
-
     timer = QTimer()
 
-
-    allLoaded = False #chroni przed aktualizowaniem, kiedy jeszcze nie jest wszystko utworzone
-
-
     def __init__(self):
-
-
 
         self.map.generate()
         QMainWindow.__init__(self)
@@ -39,20 +33,19 @@ class TanksWindow(QDialog):
         self.actualizeStatesFromMap()
         self.drawMap()
 
-        #timer
+        # timer
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.randomMove)
-        self.timer.start(1000)
+        self.timer.start(900)
 
-
-    def actualizeStatesFromMap(self): #aktualizuje pozycję obiektów na podstawie rozmieszczenia ich na mapie
-        enemies = 0#liczba wrogów
+    def actualizeStatesFromMap(self):  # aktualizuje pozycję obiektów na podstawie rozmieszczenia ich na mapie
+        enemies = 0  # liczba wrogów
         for position, element in np.ndenumerate(self.map.plane):
             if element == self.map.AGENT:
                 self.myTank.position = position
             elif element == self.map.ENEMY:
-                self.myEnemies.append(MovableObject())#dodanie kolejnego obiektu wroga
-                self.myEnemies[enemies].position = position #przypisz pozycje z mapy do zmiennych w obiekcie
+                self.myEnemies.append(MovableObject())  # dodanie kolejnego obiektu wroga
+                self.myEnemies[enemies].position = position  # przypisz pozycje z mapy do zmiennych w obiekcie
                 enemies += 1
 
     def drawMap(self):
@@ -68,15 +61,11 @@ class TanksWindow(QDialog):
         self.ui.graphicsView.setScene(self.mapScene)
         self.map.planeToGraphics(self.myTank)
 
-
     def keyPressEvent(self, event):
         self.myTank.oldTankPos = self.myTank.position  # przepisz pozycje przed aktualizacja
 
         if event.key() == Qt.Key_W:
             self.myTank.move(1)
-            self.allLoaded = True
-            print(self.allLoaded)
-
         elif event.key() == Qt.Key_S:
             self.myTank.move(-1)
         elif event.key() == Qt.Key_A:
@@ -101,18 +90,18 @@ class TanksWindow(QDialog):
                 onTile = self.map.plane[myBullet.position[0], myBullet.position[1]]  # co jest na danej plytce
 
                 if onTile == self.map.ENEMY:
-                    for enemy in self.myEnemies: #poszukiwanie właściwego wroga w tablicy
+                    for enemy in self.myEnemies:  # poszukiwanie właściwego wroga w tablicy
                         if enemy.position[0] == myBullet.position[0] and enemy.position[1] == myBullet.position[1]:
                             enemy.health -= myBullet.health
-                            if enemy.health <= 0:#jesli wrog nie ma życia to usuwanie go z mapy
+                            if enemy.health <= 0:  # jesli wrog nie ma życia to usuwanie go z mapy
                                 self.map.plane[myBullet.position[0], myBullet.position[1]] = 0
-                                self.map.tileRefresh(myBullet.position, self.map.EMPTY)#aktualizacja mapy
+                                self.map.tileRefresh(myBullet.position, self.map.EMPTY)  # aktualizacja mapy
                     myBullet.exist = False
 
                 elif onTile == self.map.DESTR:
                     self.map.plane[myBullet.position[0], myBullet.position[1]] = 0
                     myBullet.exist = False
-                    self.map.tileRefresh(myBullet.position,self.map.EMPTY)
+                    self.map.tileRefresh(myBullet.position, self.map.EMPTY)
                 elif onTile == self.map.NONDESTR:
                     myBullet.exist = False
 
@@ -132,53 +121,44 @@ class TanksWindow(QDialog):
             self.myTank.oldTankPos[0], self.myTank.oldTankPos[1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
         self.map.plane[self.myTank.position[0], self.myTank.position[1]] = self.map.AGENT  # dodawanie czolgu
 
-
         # self.map.planeToGraphics(self.myTank)#aktualizacja grafiki
-        self.map.tankRefresh(self.myTank,1)
+        self.map.tankRefresh(self.myTank, 1)
+
     def randomMove(self):
-        print("a")
-        if self.allLoaded:
-            print("ok")
-            for index, element in enumerate(self.myEnemies):
-                print(index)
-                self.myEnemies[index].rotation = randint(0, 5)
-                direction = randint(0, 1)
+
+        for index, enemy in enumerate(self.myEnemies):
+            if enemy.health > 0: #gdy przeciwnik jeszcze żyje
+                self.myEnemies[index].oldTankPos = self.myEnemies[index].position#przepisuje starą pozycje
+                if randint(1,10)>5: self.myEnemies[index].rotation = randint(0, 5) # zmiana kierunku w x% przypadków
+                direction = randint(0, 7)
                 if direction == 0: direction = -1  # wartosc do tyłu to -1 w metodzie czołgu
+                else: direction = 1
+
                 self.myEnemies[index].move(direction)
+
                 # wychodzneie poza mapę----------------------------------------------------------------
                 if self.myEnemies[index].position[0] < 0 or self.myEnemies[index].position[1] < 0 or \
-                                self.myEnemies[index].position[
-                                    1] >= self.map.HEIGHT or \
-                                self.myEnemies[index].position[
-                                    0] >= self.map.WIDTH:
+                                self.myEnemies[index].position[1] >= self.map.HEIGHT or \
+                                self.myEnemies[index].position[0] >= self.map.WIDTH:
                     self.myEnemies[index].position = self.myEnemies[index].oldTankPos
 
-                onTile = self.map.plane[
-                    self.myEnemies[index].position[0], self.myEnemies[index].position[1]]  # co jest na danej plytce
+                onTile = self.map.plane[self.myEnemies[index].position[0], self.myEnemies[index].position[1]]  # co jest na danej plytce
 
                 # jesli kolizja z przeszkoda
                 if onTile != self.map.EMPTY:
                     self.myEnemies[index].position = self.myEnemies[index].oldTankPos
-
-                self.map.plane[
-                    self.myEnemies[index].oldTankPos[0], self.myEnemies[index].oldTankPos[
-                        1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
-                self.map.plane[
-                    self.myEnemies[index].position[0], self.myEnemies[index].position[
-                        1]] = self.map.AGENT  # dodawanie czolgu
+                else: #aktualizuj tylko gdy zmiana
+                    self.map.plane[self.myEnemies[index].oldTankPos[0], self.myEnemies[index].oldTankPos[1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
+                    self.map.plane[self.myEnemies[index].position[0], self.myEnemies[index].position[1]] = self.map.ENEMY  # dodawanie czolgu
                 # wychodzneie poza mapę----------------------------------------------------------------
-
-                self.map.tankRefresh(self.myEnemies[index], 0)  # odświeża nową pozycję czołgu
-
-
+                    self.map.tankRefresh(self.myEnemies[index], 0)  # odświeża nową pozycję czołgu
 
 
 
 if (__name__ == "__main__"):
-
     qApp = QApplication(sys.argv)
     app = TanksWindow()
-    app.map.toConsole()
+    # app.map.toConsole()
     app.show()
 
     sys.exit(qApp.exec_())

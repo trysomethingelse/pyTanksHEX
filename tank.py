@@ -11,6 +11,7 @@ class MovableObject:
     availableMoveForOdd = np.array([[0, -1], [0, -2], [1, -1], [1, 1], [0, 2], [0, 1]])
     health = 100
 
+
     def rotate(self, value):  # value 1 prawo, -1 lewo
         self.rotation += value
         if (self.rotation < 0): self.rotation = 5  # przekrecenie na drugą stronę
