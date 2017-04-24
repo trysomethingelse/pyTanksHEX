@@ -32,4 +32,4 @@ class Bullet(MovableObject):
     position = np.array([0, 0])
     rotation = 0
     exist = False
-    power = 30
+    health = 30

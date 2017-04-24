@@ -59,7 +59,7 @@ class MapGenerator:
             self.svgHEX[index[0]][index[1]].setStyleSheet("background-color:transparent;")
             handleScene.addWidget(self.svgHEX[index[0]][index[1]])
 
-    def planeToGraphics(self, tank):  # odświeża całą mapę - wolne
+    def planeToGraphics(self, tank):  # odświeża całą mapę - wolne (złe działanie, wróg i swój to to samo)
         for index, element in np.ndenumerate(self.plane):
             if element == self.EMPTY:
                 self.svgHEX[index[0]][index[1]].load('./images/hex.svg')
@@ -74,10 +74,15 @@ class MapGenerator:
             if element == self.NONDESTR:
                 self.svgHEX[index[0]][index[1]].load('./images/hexBrickNonDestr.svg')
 
-    def myTankRefresh(self, myTank):
-        fileName = './images/hexMyTank' + str(myTank.rotation) + '.svg'
-        self.svgHEX[myTank.oldTankPos[0]][myTank.oldTankPos[1]].load('./images/hex.svg')
-        self.svgHEX[myTank.position[0]][myTank.position[1]].load(fileName)
+    def tankRefresh(self, tank, isMy):
+
+        if isMy==1:
+            fileName = './images/hexMytank' + str(tank.rotation) + '.svg'
+        else:
+            fileName = './images/enemy/hexEnemy' + str(tank.rotation) + '.svg'
+
+        self.svgHEX[tank.oldTankPos[0]][tank.oldTankPos[1]].load('./images/hex.svg')
+        self.svgHEX[tank.position[0]][tank.position[1]].load(fileName)
 
     def tileRefresh(self, tile, newType):
         if (newType == self.EMPTY):  # tzn zniszczenie płytki
