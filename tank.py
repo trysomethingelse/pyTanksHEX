@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class Tank:
+class MovableObject:
     position = np.array([0, 0])  # pozycja czolgu na mapie
     oldTankPos = np.array([0, 0])
     rotation = 1  # ktory ruch mozna wykonac znajdujacy sie w available 0-5
@@ -27,15 +27,9 @@ class Tank:
 
         return True
 
-        # def shoot(self):
-        #     myBullet = self.Bullet()
-        #     myBullet.position = self.position  # pozycja pocisku to pozycja czolgu
-        #     myBullet.rotation = self.rotation
-        #     myBullet.exist = True
-        #     return True
 
-
-class Bullet(Tank):
+class Bullet(MovableObject):
     position = np.array([0, 0])
     rotation = 0
     exist = False
+    power = 30

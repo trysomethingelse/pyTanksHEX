@@ -32,7 +32,9 @@ class MapGenerator:
         self.plane[3, 0:3] = np.ones([1, 3]) * self.NONDESTR
 
         self.plane[0, 0] = self.AGENT
-        # self.plane[0, 0] = self.ENEMY
+        self.plane[7, 15] = self.ENEMY
+        self.plane[3, 23] = self.ENEMY
+
 
     def toConsole(self):
         print(self.plane)
@@ -57,12 +59,15 @@ class MapGenerator:
             self.svgHEX[index[0]][index[1]].setStyleSheet("background-color:transparent;")
             handleScene.addWidget(self.svgHEX[index[0]][index[1]])
 
-    def planeToGraphics(self, myTank):  # odświeża całą mapę - wolne
+    def planeToGraphics(self, tank):  # odświeża całą mapę - wolne
         for index, element in np.ndenumerate(self.plane):
             if element == self.EMPTY:
                 self.svgHEX[index[0]][index[1]].load('./images/hex.svg')
             if element == self.AGENT:
-                fileName = './images/hexMyTank' + str(myTank.rotation) + '.svg'
+                fileName = './images/hexMyTank' + str(tank.rotation) + '.svg'
+                self.svgHEX[index[0]][index[1]].load(fileName)
+            if element == self.ENEMY:
+                fileName = './images/enemy/hexEnemy' + str(tank.rotation) + '.svg'
                 self.svgHEX[index[0]][index[1]].load(fileName)
             if element == self.DESTR:
                 self.svgHEX[index[0]][index[1]].load('./images/hexBrickDestr.svg')

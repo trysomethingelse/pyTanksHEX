@@ -1,5 +1,6 @@
+import numpy as np
 from mapGenerator import MapGenerator
-from tank import Tank, Bullet
+from tank import MovableObject, Bullet
 
 from PyQt5.QtCore import QObject, Qt
 from PyQt5.uic import loadUi
@@ -13,8 +14,11 @@ class TanksWindow(QDialog):
     WINDOW_WIDTH = 620
     WINDOW_HEIGHT = 620
     SCENE_MARGIN = 20  # chroni przed wyświtlaniem scroll bar
-    myTank = Tank()
+
+    myTank = MovableObject()
+    myEnemies = [] #tablica wrogów
     map = MapGenerator()
+
 
     def __init__(self):
         self.map.generate()
@@ -22,6 +26,19 @@ class TanksWindow(QDialog):
         self.ui = loadUi('./gui.ui', self)
         self.setWindowTitle('pyTanksHEX')
         self.resize(self.WINDOW_WIDTH, self.WINDOW_HEIGHT)
+        self.actualizeStatesFromMap()
+
+    def actualizeStatesFromMap(self): #aktualizuje pozycję obiektów na podstawie rozmieszczenia ich na mapie
+        enemies = 0#liczba wrogów
+        for position, element in np.ndenumerate(self.map.plane):
+            if element == self.map.AGENT:
+                self.myTank.position = position
+            elif element == self.map.ENEMY:
+                self.myEnemies.append(MovableObject())#dodanie kolejnego obiektu wroga
+                self.myEnemies[enemies].position = position #przypisz pozycje z mapy do zmiennych w obiekcie
+                enemies += 1
+
+
 
     def drawMap(self):
         [startX, startY] = [-self.WINDOW_WIDTH / 2, -self.WINDOW_HEIGHT / 2]
@@ -65,8 +82,14 @@ class TanksWindow(QDialog):
                 onTile = self.map.plane[myBullet.position[0], myBullet.position[1]]  # co jest na danej plytce
 
                 if onTile == self.map.ENEMY:
-                    self.map.plane[myBullet.position[0], myBullet.position[1]] = 0
+                    for enemy in self.myEnemies: #poszukiwanie właściwego wroga w tablicy
+                        if enemy.position[0] == myBullet.position[0] and enemy.position[1] == myBullet.position[1]:
+                            enemy.health -= myBullet.power
+                            if enemy.health <= 0:#jesli wrog nie ma życia to usuwanie go z mapy
+                                self.map.plane[myBullet.position[0], myBullet.position[1]] = 0
+                                self.map.tileRefresh(myBullet.position, self.map.EMPTY)#aktualizacja mapy
                     myBullet.exist = False
+
                 elif onTile == self.map.DESTR:
                     self.map.plane[myBullet.position[0], myBullet.position[1]] = 0
                     myBullet.exist = False
@@ -99,6 +122,7 @@ class TanksWindow(QDialog):
 if (__name__ == "__main__"):
     qApp = QApplication(sys.argv)
     app = TanksWindow()
+    app.map.toConsole()
     app.drawMap()
     app.show()
     sys.exit(qApp.exec_())
