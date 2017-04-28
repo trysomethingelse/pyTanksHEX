@@ -1,5 +1,5 @@
 import numpy as np
-import time
+
 from random import randint
 
 from mapGenerator import MapGenerator
@@ -70,6 +70,8 @@ class TanksWindow(QDialog):
             self.myTank.move(-1)
         elif event.key() == Qt.Key_A:
             self.myTank.rotate(-1)
+        elif event.key() == Qt.Key_L:#zapisanie gry
+            self.map.saveDataToXML()
         elif event.key() == Qt.Key_D:
             self.myTank.rotate(1)
         elif event.key() == Qt.Key_X:
@@ -127,12 +129,14 @@ class TanksWindow(QDialog):
     def randomMove(self):
 
         for index, enemy in enumerate(self.myEnemies):
-            if enemy.health > 0: #gdy przeciwnik jeszcze żyje
-                self.myEnemies[index].oldTankPos = self.myEnemies[index].position#przepisuje starą pozycje
-                if randint(1,10)>5: self.myEnemies[index].rotation = randint(0, 5) # zmiana kierunku w x% przypadków
+            if enemy.health > 0:  # gdy przeciwnik jeszcze żyje
+                self.myEnemies[index].oldTankPos = self.myEnemies[index].position  # przepisuje starą pozycje
+                if randint(1, 10) > 5: self.myEnemies[index].rotation = randint(0, 5)  # zmiana kierunku w x% przypadków
                 direction = randint(0, 7)
-                if direction == 0: direction = -1  # wartosc do tyłu to -1 w metodzie czołgu
-                else: direction = 1
+                if direction == 0:
+                    direction = -1  # wartosc do tyłu to -1 w metodzie czołgu
+                else:
+                    direction = 1
 
                 self.myEnemies[index].move(direction)
 
@@ -142,17 +146,19 @@ class TanksWindow(QDialog):
                                 self.myEnemies[index].position[0] >= self.map.WIDTH:
                     self.myEnemies[index].position = self.myEnemies[index].oldTankPos
 
-                onTile = self.map.plane[self.myEnemies[index].position[0], self.myEnemies[index].position[1]]  # co jest na danej plytce
+                onTile = self.map.plane[
+                    self.myEnemies[index].position[0], self.myEnemies[index].position[1]]  # co jest na danej plytce
 
                 # jesli kolizja z przeszkoda
                 if onTile != self.map.EMPTY:
                     self.myEnemies[index].position = self.myEnemies[index].oldTankPos
-                else: #aktualizuj tylko gdy zmiana
-                    self.map.plane[self.myEnemies[index].oldTankPos[0], self.myEnemies[index].oldTankPos[1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
-                    self.map.plane[self.myEnemies[index].position[0], self.myEnemies[index].position[1]] = self.map.ENEMY  # dodawanie czolgu
-                # wychodzneie poza mapę----------------------------------------------------------------
+                else:  # aktualizuj tylko gdy zmiana
+                    self.map.plane[self.myEnemies[index].oldTankPos[0], self.myEnemies[index].oldTankPos[
+                        1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
+                    self.map.plane[self.myEnemies[index].position[0], self.myEnemies[index].position[
+                        1]] = self.map.ENEMY  # dodawanie czolgu
+                    # wychodzneie poza mapę----------------------------------------------------------------
                     self.map.tankRefresh(self.myEnemies[index], 0)  # odświeża nową pozycję czołgu
-
 
 
 if (__name__ == "__main__"):

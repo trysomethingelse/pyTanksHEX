@@ -3,6 +3,8 @@ import math
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui, QtCore, QtSvg
+from xml.dom import minidom
+
 
 
 class MapGenerator:
@@ -19,13 +21,25 @@ class MapGenerator:
     NONDESTR = -9
     BULLET = -1
 
-    def __init__(self):
-        print("init")
-
     plane = np.zeros([WIDTH, HEIGHT])
     svgHEX = None
-    startX = 0;
+    pngHEX = None
+    startX = 0
     startY = 0
+
+    allow = True
+
+    doc = minidom.Document()
+    root = doc.createElement("mapHistory")
+    historyStep = 0
+
+
+
+
+
+    def __init__(self):
+
+        print("init")
 
     def generate(self):
         self.plane[4, :7] = np.ones([1, 7]) * self.DESTR  # pas zniszczalnych plytek
@@ -34,11 +48,31 @@ class MapGenerator:
         self.plane[0, 0] = self.AGENT
         self.plane[7, 15] = self.ENEMY
         self.plane[3, 23] = self.ENEMY
+    def saveHistory(self):
+        print("zapisywanie_",self.historyStep)
+        moment = self.doc.createElement("moment")
+        moment.setAttribute("step",str(self.historyStep))
 
 
+        for index,element in np.ndenumerate(self.plane):
+            name = "hex_"+str(index[0])+","+str(index[1])
+            change = self.doc.createElement(name)
+            change.setAttribute("map",str(element))#zapis calej mapy
+            moment.appendChild(change)
+        self.root.appendChild(moment)
+        self.doc.appendChild(self.root)
+        self.historyStep += 1
+    def saveDataToXML(self):
+        self.doc.writexml(open('data.xml', 'w'),
+                          indent="  ",
+                          addindent="  ",
+                          newl='\n')
+
+        self.doc.unlink()
+    def playHistory(self):
+        doc = minidom.parse("data.xml")
     def toConsole(self):
         print(self.plane)
-
     def graphicMap(self, handleScene):
         self.svgHEX = [[QtSvg.QSvgWidget() for i in range(0, self.HEIGHT)] for j in range(0, self.WIDTH)]
 
@@ -83,7 +117,11 @@ class MapGenerator:
 
         self.svgHEX[tank.oldTankPos[0]][tank.oldTankPos[1]].load('./images/hex.svg')
         self.svgHEX[tank.position[0]][tank.position[1]].load(fileName)
+        self.saveHistory()
+
+
 
     def tileRefresh(self, tile, newType):
         if (newType == self.EMPTY):  # tzn zniszczenie płytki
            self.svgHEX[tile[0]][tile[1]].load('./images/hex.svg')
+        self.saveHistory()
