@@ -1,8 +1,10 @@
 import numpy as np
 import math
+
+from PyQt5.QtWidgets import QGraphicsItem
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import *
-from PyQt5 import QtGui, QtCore, QtSvg
+from PyQt5 import QtGui, QtCore, QtSvg,Qt
 from xml.dom import minidom
 
 
@@ -33,13 +35,20 @@ class MapGenerator:
     root = doc.createElement("mapHistory")
     historyStep = 0
 
+    TILES_TYPES = 5
+    CLEAR_TILE = 0
+    ENEMY_TILE = 1
+    MYTANK_TILE = 2
+    DESTRUCTABLE_TILE = 3
+    NONdESTRTABLE_TILE = 4
+    memTiles = []
 
 
 
 
     def __init__(self):
-
         print("init")
+
 
     def generate(self):
         self.plane[4, :7] = np.ones([1, 7]) * self.DESTR  # pas zniszczalnych plytek
@@ -73,40 +82,77 @@ class MapGenerator:
         doc = minidom.parse("data.xml")
     def toConsole(self):
         print(self.plane)
+    # def graphicMap(self, handleScene):
+    #     self.svgHEX = [[QtSvg.QSvgWidget() for i in range(0, self.HEIGHT)] for j in range(0, self.WIDTH)]
+    #
+    #     for index, element in np.ndenumerate(self.svgHEX):
+    #         self.svgHEX[index[0]][index[1]] = self.memoryEmptyTile
+    #
+    #         offsetX = 3 / 2 * self.TILE_WIDTH * index[0]
+    #
+    #         if index[1] % 2 == 1:  # przesuniecie o staly offset
+    #             offsetX += 3 / 4 * self.TILE_WIDTH
+    #
+    #         offsetY = index[1] * self.TILE_HEIGHT / 2
+    #
+    #         self.svgHEX[index[0]][index[1]].setGeometry(self.startX + offsetX,
+    #                                                     self.startY + offsetY,
+    #                                                     self.TILE_WIDTH,
+    #                                                     self.TILE_HEIGHT)  # odpowiada za rysowanie płytki w odpowiednim miejscu
+    #         self.svgHEX[index[0]][index[1]].setStyleSheet("background-color:transparent;")
+    #         handleScene.addWidget(self.svgHEX[index[0]][index[1]])
     def graphicMap(self, handleScene):
-        self.svgHEX = [[QtSvg.QSvgWidget() for i in range(0, self.HEIGHT)] for j in range(0, self.WIDTH)]
+        self.tilesToMemory()
 
-        for index, element in np.ndenumerate(self.svgHEX):
-            self.svgHEX[index[0]][index[1]] = QtSvg.QSvgWidget('./images/hex.svg')
 
+        self.pngHEX = [[QLabel() for i in range(0, self.HEIGHT)] for j in range(0, self.WIDTH)]
+
+        for index, element in np.ndenumerate(self.pngHEX):
+
+            self.pngHEX[index[0]][index[1]].setPixmap(self.memTiles[self.CLEAR_TILE])
+
+            #obliczenia pozycji
             offsetX = 3 / 2 * self.TILE_WIDTH * index[0]
 
             if index[1] % 2 == 1:  # przesuniecie o staly offset
                 offsetX += 3 / 4 * self.TILE_WIDTH
-
             offsetY = index[1] * self.TILE_HEIGHT / 2
 
-            self.svgHEX[index[0]][index[1]].setGeometry(self.startX + offsetX,
+            self.pngHEX[index[0]][index[1]].setGeometry(self.startX + offsetX,
                                                         self.startY + offsetY,
                                                         self.TILE_WIDTH,
                                                         self.TILE_HEIGHT)  # odpowiada za rysowanie płytki w odpowiednim miejscu
-            self.svgHEX[index[0]][index[1]].setStyleSheet("background-color:transparent;")
-            handleScene.addWidget(self.svgHEX[index[0]][index[1]])
 
-    def planeToGraphics(self, tank):  # odświeża całą mapę - wolne (złe działanie, wróg i swój to to samo)
+            self.pngHEX[index[0]][index[1]].setStyleSheet("background:transparent;")
+
+            handleScene.addWidget(self.pngHEX[index[0]][index[1]])
+
+    def tilesToMemory(self):
+        self.memTiles.append(QtGui.QPixmap("./images/hex.png"))
+
+
+
+
+
+        self.memTiles[self.CLEAR_TILE] = self.memTiles[self.CLEAR_TILE].scaled(self.TILE_WIDTH, self.TILE_HEIGHT)
+
+
+
+
+
+    def planeToGraphics(self, tank):  # odświeża całą mapę - wolne
         for index, element in np.ndenumerate(self.plane):
-            if element == self.EMPTY:
-                self.svgHEX[index[0]][index[1]].load('./images/hex.svg')
+            fileName = "./images/hex.png"#jesli płytka pusta
+
             if element == self.AGENT:
-                fileName = './images/hexMyTank' + str(tank.rotation) + '.svg'
-                self.svgHEX[index[0]][index[1]].load(fileName)
+                fileName = './images/myTank/hexMyTank' + str(tank.rotation) + '.png'
             if element == self.ENEMY:
-                fileName = './images/enemy/hexEnemy' + str(tank.rotation) + '.svg'
-                self.svgHEX[index[0]][index[1]].load(fileName)
+                fileName = './images/enemy/hexEnemy' + str(tank.rotation) + '.png'
             if element == self.DESTR:
-                self.svgHEX[index[0]][index[1]].load('./images/hexBrickDestr.svg')
+                fileName = './images/hexBrickDestr.png'
             if element == self.NONDESTR:
-                self.svgHEX[index[0]][index[1]].load('./images/hexBrickNonDestr.svg')
+                fileName = './images/hexBrickNonDestr.png'
+            self.pngHEX[index[0]][index[1]].setPixmap(QtGui.QPixmap(fileName))
 
     def tankRefresh(self, tank, isMy):
 

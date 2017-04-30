@@ -36,7 +36,7 @@ class TanksWindow(QDialog):
         # timer
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.randomMove)
-        self.timer.start(900)
+        self.timer.start(90000)
 
     def actualizeStatesFromMap(self):  # aktualizuje pozycję obiektów na podstawie rozmieszczenia ich na mapie
         enemies = 0  # liczba wrogów
@@ -57,8 +57,11 @@ class TanksWindow(QDialog):
         self.map.startY = -self.mapScene.height() / 2
 
         self.ui.graphicsView.setGeometry(0, 0, self.WINDOW_WIDTH, self.WINDOW_HEIGHT)
+
         self.map.graphicMap(self.mapScene)
         self.ui.graphicsView.setScene(self.mapScene)
+
+
         self.map.planeToGraphics(self.myTank)
 
     def keyPressEvent(self, event):
