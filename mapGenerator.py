@@ -35,13 +35,16 @@ class MapGenerator:
     root = doc.createElement("mapHistory")
     historyStep = 0
 
-    TILES_TYPES = 5
+    #wymienione typy płytek które nie są ruchome
+    TILES_TYPES = 3
     CLEAR_TILE = 0
-    ENEMY_TILE = 1
-    MYTANK_TILE = 2
-    DESTRUCTABLE_TILE = 3
-    NONdESTRTABLE_TILE = 4
-    memTiles = []
+    DESTRUCTABLE_TILE = 1
+    NONDESTRTABLE_TILE = 2
+    otherTiles = []
+
+    #odpowiednia rotacja czołgu to odpowiedni indeks w tabeli
+    enemyTiles = []
+    myTankTiles = []
 
 
 
@@ -104,12 +107,11 @@ class MapGenerator:
     def graphicMap(self, handleScene):
         self.tilesToMemory()
 
-
         self.pngHEX = [[QLabel() for i in range(0, self.HEIGHT)] for j in range(0, self.WIDTH)]
 
         for index, element in np.ndenumerate(self.pngHEX):
 
-            self.pngHEX[index[0]][index[1]].setPixmap(self.memTiles[self.CLEAR_TILE])
+            self.pngHEX[index[0]][index[1]].setPixmap(self.otherTiles[self.CLEAR_TILE])
 
             #obliczenia pozycji
             offsetX = 3 / 2 * self.TILE_WIDTH * index[0]
@@ -128,46 +130,53 @@ class MapGenerator:
             handleScene.addWidget(self.pngHEX[index[0]][index[1]])
 
     def tilesToMemory(self):
-        self.memTiles.append(QtGui.QPixmap("./images/hex.png"))
+        self.otherTiles.append(QtGui.QPixmap("./images/hex.png"))
+        self.otherTiles.append(QtGui.QPixmap("./images/hexBrickDestr.png"))
+        self.otherTiles.append(QtGui.QPixmap("./images/hexBrickNonDestr.png"))
+        for index in range(self.TILES_TYPES):#ustawia odpowiednie rozmiary płytek
+            self.otherTiles[index] = self.otherTiles[index].scaled(self.TILE_WIDTH, self.TILE_HEIGHT)
 
+        #płytki czołgów
+        for index in range(6):#wszystkie możliwe ustawienia kąta
+            print('./images/myTank/hexMyTank' + str(index) + '.png')
+            self.myTankTiles.append(QtGui.QPixmap('./images/myTank/hexMyTank' + str(index) + '.png'))
+            self.myTankTiles[index] = self.myTankTiles[index].scaled(self.TILE_WIDTH,
+                                                                     self.TILE_HEIGHT)#przestaw rozmiar
 
-
-
-
-        self.memTiles[self.CLEAR_TILE] = self.memTiles[self.CLEAR_TILE].scaled(self.TILE_WIDTH, self.TILE_HEIGHT)
-
-
+            self.enemyTiles.append(QtGui.QPixmap('./images/enemy/hexEnemy' + str(index) + '.png'))
+            self.enemyTiles[index] = self.enemyTiles[index].scaled(self.TILE_WIDTH,
+                                                                   self.TILE_HEIGHT)  # przestaw rozmiar
 
 
 
     def planeToGraphics(self, tank):  # odświeża całą mapę - wolne
         for index, element in np.ndenumerate(self.plane):
-            fileName = "./images/hex.png"#jesli płytka pusta
+            tile = self.otherTiles[self.CLEAR_TILE]#jesli płytka pusta
 
             if element == self.AGENT:
-                fileName = './images/myTank/hexMyTank' + str(tank.rotation) + '.png'
+                tile = self.myTankTiles[tank.rotation]
             if element == self.ENEMY:
-                fileName = './images/enemy/hexEnemy' + str(tank.rotation) + '.png'
+                tile = self.enemyTiles[tank.rotation]
             if element == self.DESTR:
-                fileName = './images/hexBrickDestr.png'
+                tile = self.otherTiles[self.DESTRUCTABLE_TILE]
             if element == self.NONDESTR:
-                fileName = './images/hexBrickNonDestr.png'
-            self.pngHEX[index[0]][index[1]].setPixmap(QtGui.QPixmap(fileName))
+                tile = self.otherTiles[self.NONDESTRTABLE_TILE]  # jesli płytka pusta
+            self.pngHEX[index[0]][index[1]].setPixmap(tile)
 
     def tankRefresh(self, tank, isMy):
 
         if isMy==1:
-            fileName = './images/hexMytank' + str(tank.rotation) + '.svg'
+            tile = self.myTankTiles[tank.rotation]
         else:
-            fileName = './images/enemy/hexEnemy' + str(tank.rotation) + '.svg'
+            tile = self.enemyTiles[tank.rotation]
 
-        self.svgHEX[tank.oldTankPos[0]][tank.oldTankPos[1]].load('./images/hex.svg')
-        self.svgHEX[tank.position[0]][tank.position[1]].load(fileName)
+        self.pngHEX[tank.oldTankPos[0]][tank.oldTankPos[1]].setPixmap(self.otherTiles[self.CLEAR_TILE])
+        self.pngHEX[tank.position[0]][tank.position[1]].setPixmap(tile)
         self.saveHistory()
 
 
 
-    def tileRefresh(self, tile, newType):
-        if (newType == self.EMPTY):  # tzn zniszczenie płytki
-           self.svgHEX[tile[0]][tile[1]].load('./images/hex.svg')
+    def tileRefresh(self, tile, newType): #używane do niszczenia płytki
+        if (newType == self.EMPTY):
+           self.pngHEX[tile[0]][tile[1]].setPixmap(self.otherTiles[self.CLEAR_TILE])
         self.saveHistory()
