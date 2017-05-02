@@ -15,6 +15,10 @@ class MapGenerator:
     TILE_WIDTH = 50
     TILE_HEIGHT = 50
 
+    MY_TANK = 1
+    NOT_MY_TANK = 0
+
+
     ENEMIES = 1
     ENEMY = -10
     EMPTY = 0
@@ -36,10 +40,11 @@ class MapGenerator:
     historyStep = 0
 
     #wymienione typy płytek które nie są ruchome
-    TILES_TYPES = 3
+    TILES_TYPES = 4
     CLEAR_TILE = 0
     DESTRUCTABLE_TILE = 1
     NONDESTRTABLE_TILE = 2
+    BULLET_TILE = 3
     otherTiles = []
 
     #odpowiednia rotacja czołgu to odpowiedni indeks w tabeli
@@ -133,12 +138,12 @@ class MapGenerator:
         self.otherTiles.append(QtGui.QPixmap("./images/hex.png"))
         self.otherTiles.append(QtGui.QPixmap("./images/hexBrickDestr.png"))
         self.otherTiles.append(QtGui.QPixmap("./images/hexBrickNonDestr.png"))
+        self.otherTiles.append(QtGui.QPixmap("./images/hexBullet.png"))
         for index in range(self.TILES_TYPES):#ustawia odpowiednie rozmiary płytek
             self.otherTiles[index] = self.otherTiles[index].scaled(self.TILE_WIDTH, self.TILE_HEIGHT)
 
         #płytki czołgów
         for index in range(6):#wszystkie możliwe ustawienia kąta
-            print('./images/myTank/hexMyTank' + str(index) + '.png')
             self.myTankTiles.append(QtGui.QPixmap('./images/myTank/hexMyTank' + str(index) + '.png'))
             self.myTankTiles[index] = self.myTankTiles[index].scaled(self.TILE_WIDTH,
                                                                      self.TILE_HEIGHT)#przestaw rozmiar
@@ -149,7 +154,7 @@ class MapGenerator:
 
 
 
-    def planeToGraphics(self, tank):  # odświeża całą mapę - wolne
+    def planeToGraphics(self, tank):  # odświeża całą mapę
         for index, element in np.ndenumerate(self.plane):
             tile = self.otherTiles[self.CLEAR_TILE]#jesli płytka pusta
 
@@ -161,6 +166,9 @@ class MapGenerator:
                 tile = self.otherTiles[self.DESTRUCTABLE_TILE]
             if element == self.NONDESTR:
                 tile = self.otherTiles[self.NONDESTRTABLE_TILE]  # jesli płytka pusta
+            if element == self.BULLET:
+                tile = self.otherTiles[self.BULLET_TILE]  # jesli płytka pusta
+
             self.pngHEX[index[0]][index[1]].setPixmap(tile)
 
     def tankRefresh(self, tank, isMy):
@@ -170,13 +178,16 @@ class MapGenerator:
         else:
             tile = self.enemyTiles[tank.rotation]
 
-        self.pngHEX[tank.oldTankPos[0]][tank.oldTankPos[1]].setPixmap(self.otherTiles[self.CLEAR_TILE])
+        self.pngHEX[tank.oldPos[0]][tank.oldPos[1]].setPixmap(self.otherTiles[self.CLEAR_TILE])
         self.pngHEX[tank.position[0]][tank.position[1]].setPixmap(tile)
         self.saveHistory()
 
 
 
-    def tileRefresh(self, tile, newType): #używane do niszczenia płytki
+    def tileRefresh(self, tile, newType): #używane do podmieniania płytki
         if (newType == self.EMPTY):
            self.pngHEX[tile[0]][tile[1]].setPixmap(self.otherTiles[self.CLEAR_TILE])
+        if (newType == self.BULLET):
+           self.pngHEX[tile[0]][tile[1]].setPixmap(self.otherTiles[self.BULLET_TILE])
+
         self.saveHistory()

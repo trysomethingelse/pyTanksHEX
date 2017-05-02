@@ -3,14 +3,17 @@ import numpy as np
 
 class MovableObject:
     position = np.array([0, 0])  # pozycja czolgu na mapie
-    oldTankPos = np.array([0, 0])
+    oldPos = np.array([0, 0])
     rotation = 1  # ktory ruch mozna wykonac znajdujacy sie w available 0-5
+    motionCounter = 0 #wykorzystywany dla pocisku
 
     availableMoveForEven = np.array(
         [[-1, -1], [0, -2], [0, -1], [0, 1], [0, 2], [-1, 1]])  # dla przystych kolumn w tablicy
     availableMoveForOdd = np.array([[0, -1], [0, -2], [1, -1], [1, 1], [0, 2], [0, 1]])
     health = 100
 
+    def __init__(self,health):
+        self.health = health
 
     def rotate(self, value):  # value 1 prawo, -1 lewo
         self.rotation += value
@@ -27,10 +30,3 @@ class MovableObject:
         if direction == -1: self.rotate(3)  # przywrócenie poczatkowego ustawienia
 
         return True
-
-
-class Bullet(MovableObject):
-    position = np.array([0, 0])
-    rotation = 0
-    exist = False
-    health = 30
