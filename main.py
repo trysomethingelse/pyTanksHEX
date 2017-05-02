@@ -19,14 +19,18 @@ class TanksWindow(QDialog):
     SCENE_MARGIN = 20  # chroni przed wyświtlaniem scroll bar
     BULLET_HEALTH = 30
     TANK_HEALTH = 100
+    REALISTIC_MOVES_ON = True
+    REALISTIC_MOVES_OFF = False
 
 
-    myTank = MovableObject(TANK_HEALTH)
+
+    myTank = MovableObject(TANK_HEALTH,REALISTIC_MOVES_ON)
     myEnemies = []  # tablica wrogów
     bullets = [] #tablica pociskow
     map = MapGenerator()
     randomMoveTimer = QTimer()
     bulletTimer = QTimer()
+
 
     def __init__(self):
 
@@ -45,14 +49,13 @@ class TanksWindow(QDialog):
         self.bulletTimer.timeout.connect(self.bulletMove)
         self.bulletTimer.start(30)
 
-
     def actualizeStatesFromMap(self):  # aktualizuje pozycję obiektów na podstawie rozmieszczenia ich na mapie
         enemies = 0  # liczba wrogów
         for position, element in np.ndenumerate(self.map.plane):
             if element == self.map.AGENT:
                 self.myTank.position = position
             elif element == self.map.ENEMY:
-                self.myEnemies.append(MovableObject(self.TANK_HEALTH))  # dodanie kolejnego obiektu wroga
+                self.myEnemies.append(MovableObject(self.TANK_HEALTH,self.REALISTIC_MOVES_ON))  # dodanie kolejnego obiektu wroga
                 self.myEnemies[enemies].position = position  # przypisz pozycje z mapy do zmiennych w obiekcie
                 enemies += 1
 
@@ -86,7 +89,7 @@ class TanksWindow(QDialog):
         elif event.key() == Qt.Key_D:
             self.myTank.rotate(1)
         elif event.key() == Qt.Key_X:
-            self.bullets.append(MovableObject(self.BULLET_HEALTH))
+            self.bullets.append(MovableObject(self.BULLET_HEALTH,self.REALISTIC_MOVES_OFF))#ustawienie opóźnienia realistycznosci na 0
             self.bullets[-1].position = self.myTank.position  # pozycja pocisku to pozycja czolgu
             self.bullets[-1].rotation = self.myTank.rotation
 
