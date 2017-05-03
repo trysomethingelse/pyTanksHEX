@@ -73,7 +73,9 @@ class TanksWindow(QDialog):
         self.ui.graphicsView.setScene(self.mapScene)
 
 
-        self.map.planeToGraphics(self.myTank)
+        self.map.planeToGraphics()#ładowanie układu płytek
+        self.map.tankRefresh(self.myTank,self.map.MY_TANK)#ładowanie własnego czołgu
+        for enemy in self.myEnemies: self.map.tankRefresh(enemy,self.map.NOT_MY_TANK)#ładowanie czołgów wroga
 
     def keyPressEvent(self, event):
         self.myTank.oldPos = self.myTank.position  # przepisz pozycje przed aktualizacja
@@ -86,6 +88,8 @@ class TanksWindow(QDialog):
             self.myTank.rotate(-1)
         elif event.key() == Qt.Key_L:#zapisanie gry
             self.map.saveDataToXML()
+        elif event.key() == Qt.Key_O:  # odtworzenie zapisanej gry
+            self.map.readHistory()
         elif event.key() == Qt.Key_D:
             self.myTank.rotate(1)
         elif event.key() == Qt.Key_X:

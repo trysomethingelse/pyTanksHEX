@@ -111,14 +111,10 @@ class MapGenerator:
             self.enemyTiles[index] = self.enemyTiles[index].scaled(self.TILE_WIDTH,
                                                                    self.TILE_HEIGHT)  # przestaw rozmiar
 
-    def planeToGraphics(self, tank):  # odświeża całą mapę
+    def planeToGraphics(self):  # odświeża całą mapę
         for index, element in np.ndenumerate(self.plane):
             tile = self.otherTiles[self.CLEAR_TILE]  # jesli płytka pusta
 
-            if element == self.AGENT:
-                tile = self.myTankTiles[tank.rotation]
-            if element == self.ENEMY:
-                tile = self.enemyTiles[tank.rotation]
             if element == self.DESTR:
                 tile = self.otherTiles[self.DESTRUCTABLE_TILE]
             if element == self.NONDESTR:
@@ -153,15 +149,13 @@ class MapGenerator:
         self.saveHistory()
 
     def saveHistory(self):
-        print("zapisywanie_", self.historyStep)
         moment = self.doc.createElement("moment")
-        moment.setAttribute("step", str(self.historyStep))
 
+        planeString = ""
         for index, element in np.ndenumerate(self.plane):
-            name = "hex_" + str(index[0]) + "," + str(index[1])
-            change = self.doc.createElement(name)
-            change.setAttribute("map", str(element))  # zapis calej mapy
-            moment.appendChild(change)
+            planeString += (str(int(element)) + " ")
+        nodeText = self.doc.createTextNode(planeString)
+        moment.appendChild(nodeText)
         self.root.appendChild(moment)
         self.doc.appendChild(self.root)
         self.historyStep += 1
@@ -170,3 +164,30 @@ class MapGenerator:
                           indent="  ",
                           addindent="  ",
                           newl='\n')
+    def readHistory(self):
+        print("podróż w czasie")
+        doc = minidom.parse('data.xml')
+        docNodes = doc.childNodes
+        for element in docNodes[0].getElementsByTagName("moment"):
+            historyStringPlane = element.toxml().split(' ')
+            historyPlane = self.xmlStringToPlane(historyStringPlane)
+
+        print("stara: ")
+        print(self.plane)
+        self.plane = historyPlane
+        print("nowa: ")
+        print(self.plane)
+        self.planeToGraphics()
+    def xmlStringToPlane(self,xmlString):
+        row = 0
+        column = 0
+        historyPlane = np.zeros([self.WIDTH,self.HEIGHT])
+        xmlString = xmlString[8:]
+        for element in xmlString:
+            if column == self.WIDTH: #jesli kolumna należy do kolejnego rzędu
+                row += 1
+                column = 0
+            else:
+                historyPlane[row][column] = int(element)
+            column += 1
+        return historyPlane
