@@ -33,7 +33,9 @@ class MovableObject:
 
     def move(self, direction):  # direction 1-przód, -1 tył
         if not self.blockMotion:
-            if direction == -1: self.rotate(3)  # rotacja w przeciwna strone gdy cofanie
+            if direction == -1:
+                self.rotate(3)  # rotacja w przeciwna strone gdy cofanie
+                self.blockMotion = False #odblokowanie możliwości natychmiastowego skrętu, zablokowana po pierwszym skrecie
             if self.position[1] % 2 == 0:  # dla parzystych wierszy
                 self.position = np.add(self.position, self.availableMoveForEven[self.rotation])
             else:
