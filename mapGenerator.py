@@ -172,26 +172,21 @@ class MapGenerator:
             historyStringPlane = element.toxml().split(' ')
             historyPlane = self.xmlStringToPlane(historyStringPlane)
 
-        print("stara: ")
-        print(self.plane)
+        print("stara: ",self.plane)
         self.plane = historyPlane
-        print("nowa: ")
-        print(self.plane)
         self.planeToGraphics()
     def xmlStringToPlane(self,xmlString):
         row = 0
         column = 0
         historyPlane = np.zeros([self.WIDTH,self.HEIGHT])
-        print(xmlString)
         xmlString[0] = xmlString[0][8:]#usuniecie napisu nagłówka
-        print("usunieta: ",xmlString)
         for element in xmlString:
-            print(row,", ",column)
+            if row == self.WIDTH-1 and column == self.HEIGHT-1:break#przerwij gdy sczytano wszystkie
+            # print(element)
             if column == self.HEIGHT: #jesli kolumna należy do kolejnego rzędu
                 row += 1
                 column = 0
-            else:
-                historyPlane[row][column] = int(element)
+            historyPlane[row][column] = int(element)
             column += 1
         print(historyPlane)
         return historyPlane
