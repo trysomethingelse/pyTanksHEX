@@ -26,7 +26,6 @@ class MapGenerator:
     BULLET = -1
 
     plane = np.zeros([WIDTH, HEIGHT])
-    svgHEX = None
     pngHEX = None
     startX = 0
     startY = 0
@@ -167,6 +166,7 @@ class MapGenerator:
     def readHistory(self):
         print("podróż w czasie")
         doc = minidom.parse('data.xml')
+
         docNodes = doc.childNodes
         for element in docNodes[0].getElementsByTagName("moment"):
             historyStringPlane = element.toxml().split(' ')
@@ -182,12 +182,16 @@ class MapGenerator:
         row = 0
         column = 0
         historyPlane = np.zeros([self.WIDTH,self.HEIGHT])
-        xmlString = xmlString[8:]
+        print(xmlString)
+        xmlString[0] = xmlString[0][8:]#usuniecie napisu nagłówka
+        print("usunieta: ",xmlString)
         for element in xmlString:
-            if column == self.WIDTH: #jesli kolumna należy do kolejnego rzędu
+            print(row,", ",column)
+            if column == self.HEIGHT: #jesli kolumna należy do kolejnego rzędu
                 row += 1
                 column = 0
             else:
                 historyPlane[row][column] = int(element)
             column += 1
+        print(historyPlane)
         return historyPlane
