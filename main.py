@@ -9,6 +9,7 @@ from PyQt5.QtCore import QObject, Qt, QTimer
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui, QtCore, QtSvg
+from xml.dom import minidom
 
 import sys
 
@@ -21,6 +22,7 @@ class TanksWindow(QDialog):
     TANK_HEALTH = 100
     REALISTIC_MOVES_ON = True
     REALISTIC_MOVES_OFF = False
+    MY_TANK_ID = 1000
 
     myTank = MovableObject(TANK_HEALTH,REALISTIC_MOVES_ON)
     myEnemies = []  # tablica wrogów
@@ -28,6 +30,15 @@ class TanksWindow(QDialog):
     map = MapGenerator()
     randomMoveTimer = QTimer()
     bulletTimer = QTimer()
+    doc = minidom.Document()
+    root = doc.createElement("mapHistory")
+
+    #akcje:
+    FORWARD = 1
+    BACKWARD = 2
+    LEFT = 3
+    RIGHT = 4
+    SHOOT = 5
 
 
     def __init__(self):
@@ -83,12 +94,15 @@ class TanksWindow(QDialog):
 
         if event.key() == Qt.Key_W:
             self.myTank.move(1)
+            self.addActionToHistory(self.FORWARD,self.MY_TANK_ID)
         elif event.key() == Qt.Key_S:
             self.myTank.move(-1)
+            self.addActionToHistory(self.BACKWARD,self.MY_TANK_ID)
         elif event.key() == Qt.Key_A:
             self.myTank.rotate(-1)
+            self.addActionToHistory(self.LEFT,self.MY_TANK_ID)
         elif event.key() == Qt.Key_L:#zapisanie gry
-            self.map.saveDataToXML()
+            self.saveDataToXML()
         elif event.key() == Qt.Key_O:  # odtworzenie zapisanej gry
             self.map.readHistory()
             self.actualizeStatesFromMap()
@@ -98,11 +112,13 @@ class TanksWindow(QDialog):
 
         elif event.key() == Qt.Key_D:
             self.myTank.rotate(1)
+            self.addActionToHistory(self.RIGHT,self.MY_TANK_ID)
+
         elif event.key() == Qt.Key_X:
             self.bullets.append(MovableObject(self.BULLET_HEALTH,self.REALISTIC_MOVES_OFF))#ustawienie opóźnienia realistycznosci na 0
             self.bullets[-1].position = self.myTank.position  # pozycja pocisku to pozycja czolgu
             self.bullets[-1].rotation = self.myTank.rotation
-
+            self.addActionToHistory(self.SHOOT, self.MY_TANK_ID)
 
         # wychodzneie czołgu poza mapę
         if self.myTank.position[0] < 0 or self.myTank.position[1] < 0 or self.myTank.position[1] >= self.map.HEIGHT or \
@@ -118,7 +134,7 @@ class TanksWindow(QDialog):
 
         self.map.plane[
             self.myTank.oldPos[0], self.myTank.oldPos[1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
-        self.map.plane[self.myTank.position[0], self.myTank.position[1]] = self.map.AGENT_ROT[self.myTank.rotation]  # dodawanie czolgu
+        self.map.plane[self.myTank.position[0], self.myTank.position[1]] = self.map.AGENT  # dodawanie czolgu
 
         self.map.tankRefresh(self.myTank, self.map.MY_TANK)
     def randomMove(self):
@@ -126,14 +142,28 @@ class TanksWindow(QDialog):
         for index, enemy in enumerate(self.myEnemies):
             if enemy.health > 0:  # gdy przeciwnik jeszcze żyje
                 self.myEnemies[index].oldPos = self.myEnemies[index].position  # przepisuje starą pozycje
-                if randint(1, 10) > 5: self.myEnemies[index].rotation = randint(0, 5)  # zmiana kierunku w x% przypadków
-                direction = randint(0, 7)
-                if direction == 0:
-                    direction = -1  # wartosc do tyłu to -1 w metodzie czołgu
-                else:
-                    direction = 1
 
-                self.myEnemies[index].move(direction)
+                #losowanie ruchi
+
+                if randint(1, 10) > 3: #obrót
+                    rotation = randint(-1,1)
+                    rotationDone = self.LEFT #potrzebne do przekazania odpowiedniego obrotu do XML
+                    self.myEnemies[index].rotate(rotation)
+                    if rotation == -1: rotationDone = self.LEFT
+                    elif rotation == 1: rotationDone = self.RIGHT
+                    if rotation != 0 : #jesli wykonano jakikolwiek obrot to go zapisz do XML
+                        self.addActionToHistory(rotationDone,index)
+                else: #ruch w przód lub tył
+                    direction = randint(0, 7)
+                    moveDone = self.FORWARD#potrzebne do przekazania odpowiedniego ruchu do XML
+                    if direction == 0:
+                        direction = -1  # wartosc do tyłu to -1 w metodzie czołgu
+                    else:
+                        direction = 1
+                    self.myEnemies[index].move(direction)
+                    if direction == -1 : moveDone = self.BACKWARD
+                    elif direction == 1 : moveDone = self.FORWARD
+                    self.addActionToHistory(moveDone, index)
 
                 # wychodzneie poza mapę----------------------------------------------------------------
                 if self.myEnemies[index].position[0] < 0 or self.myEnemies[index].position[1] < 0 or \
@@ -151,7 +181,7 @@ class TanksWindow(QDialog):
                     self.map.plane[self.myEnemies[index].oldPos[0], self.myEnemies[index].oldPos[
                         1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
                     self.map.plane[self.myEnemies[index].position[0], self.myEnemies[index].position[
-                        1]] = self.map.ENEMY_ROT[enemy.rotation]  # dodawanie czolgu
+                        1]] = self.map.ENEMY  # dodawanie czolgu
                     # wychodzneie poza mapę----------------------------------------------------------------
                     self.map.tankRefresh(self.myEnemies[index], 0)  # odświeża nową pozycję czołgu
 
@@ -193,6 +223,59 @@ class TanksWindow(QDialog):
 
                 else:#wychodzenie pocisku za mapę
                     self.bullets.pop(index)
+#obsluga XML ....................................................................................................
+    def playHistory(self):
+        doc = minidom.parse("data.xml")
+    def saveDataToXML(self):
+        self.doc.writexml(open('data.xml', 'w'),
+                          indent="  ",
+                          addindent="  ",
+                          newl='\n')
+    def addActionToHistory(self,action,tankID):
+        moment = self.doc.createElement("moment")
+        dataString = str(action) + "," +  str(tankID)
+        print(dataString)
+        nodeText = self.doc.createTextNode(dataString)
+        moment.appendChild(nodeText)
+        self.root.appendChild(moment)
+        self.doc.appendChild(self.root)
+    # def saveHistory(self):
+    #     moment = self.doc.createElement("moment")
+    #
+    #     dataString = ""
+    #     for index, element in np.ndenumerate(self.plane):
+    #         dataString += (str(element) + " ")
+    #     nodeText = self.doc.createTextNode(planeString)
+    #     moment.appendChild(nodeText)
+    #     self.root.appendChild(moment)
+    #     self.doc.appendChild(self.root)
+    #     self.historyStep += 1
+    def readHistory(self):
+        print("podróż w czasie")
+        doc = minidom.parse('data.xml')
+
+        docNodes = doc.childNodes
+        for element in docNodes[0].getElementsByTagName("moment"):
+            historyStringPlane = element.toxml().split(' ')
+            historyPlane = self.xmlStringToPlane(historyStringPlane)
+
+
+        self.plane = historyPlane
+        self.planeToGraphics()
+        self.toConsole()
+    def xmlStringToPlane(self,xmlString):
+        row = 0
+        column = 0
+        historyPlane = np.zeros([self.WIDTH,self.HEIGHT])
+        xmlString[0] = xmlString[0][8:]#usuniecie napisu nagłówka
+        for element in xmlString:
+            if row == self.WIDTH-1 and column == self.HEIGHT-1:break#przerwij gdy sczytano wszystkie
+            if column == self.HEIGHT: #jesli kolumna należy do kolejnego rzędu
+                row += 1
+                column = 0
+            historyPlane[row][column] = element
+            column += 1
+        return historyPlane
 
 if (__name__ == "__main__"):
     qApp = QApplication(sys.argv)

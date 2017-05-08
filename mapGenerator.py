@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QGraphicsItem
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui, QtCore, QtSvg, Qt
-from xml.dom import minidom
+
 
 
 class MapGenerator:
@@ -19,10 +19,8 @@ class MapGenerator:
 
     ENEMIES = 1
     ENEMY = -10
-    ENEMY_ROT = [-10.0,-10.1,-10.2,-10.3,-10.4,-10.5]
     EMPTY = 0
     AGENT = 10
-    AGENT_ROT = [10.0,10.1,10.2,10.3,10.4,10.5]#rotacja czołgu zapisana w postaci części dzięsiętnych
     DESTR = 9
     NONDESTR = -9
     BULLET = -1
@@ -32,8 +30,8 @@ class MapGenerator:
     startX = 0
     startY = 0
 
-    doc = minidom.Document()
-    root = doc.createElement("mapHistory")
+
+
     historyStep = 0
 
     # wymienione typy płytek które nie są ruchome
@@ -55,14 +53,9 @@ class MapGenerator:
         self.plane[4, :7] = np.ones([1, 7]) * self.DESTR  # pas zniszczalnych plytek
         self.plane[3, 0:3] = np.ones([1, 3]) * self.NONDESTR
 
-        self.plane[0, 0] = self.AGENT_ROT[0]
-        self.plane[7, 15] = self.ENEMY_ROT[0]
+        self.plane[0, 0] = self.AGENT
+        self.plane[7, 15] = self.ENEMY
         # self.plane[3, 23] = self.ENEMY
-
-
-
-    def playHistory(self):
-        doc = minidom.parse("data.xml")
 
     def toConsole(self):
         print(self.plane)
@@ -122,7 +115,6 @@ class MapGenerator:
                 tile = self.otherTiles[self.BULLET_TILE]  # jesli płytka pusta
 
             self.pngHEX[index[0]][index[1]].setPixmap(tile)
-        self.mapChange()  # wywoływana w każdej zmianie mapy
 
     def tankRefresh(self, tank, isMy):
 
@@ -133,16 +125,13 @@ class MapGenerator:
 
         self.pngHEX[tank.oldPos[0]][tank.oldPos[1]].setPixmap(self.otherTiles[self.CLEAR_TILE])
         self.pngHEX[tank.position[0]][tank.position[1]].setPixmap(tile)
-        self.mapChange()  # wywoływana w każdej zmianie mapy
 
     def tileRefresh(self, tile, newType):  # używane do podmieniania płytki
         if (newType == self.EMPTY):
             self.pngHEX[tile[0]][tile[1]].setPixmap(self.otherTiles[self.CLEAR_TILE])
         if (newType == self.BULLET):
             self.pngHEX[tile[0]][tile[1]].setPixmap(self.otherTiles[self.BULLET_TILE])
-        self.mapChange()  # wywoływana w każdej zmianie mapy
 
-        self.saveHistory()
 
     def mapChange(self):# wywoływana w każdej zmianie mapy
         self.saveHistory()
@@ -158,34 +147,4 @@ class MapGenerator:
         self.root.appendChild(moment)
         self.doc.appendChild(self.root)
         self.historyStep += 1
-    def saveDataToXML(self):
-        self.doc.writexml(open('data.xml', 'w'),
-                          indent="  ",
-                          addindent="  ",
-                          newl='\n')
-    def readHistory(self):
-        print("podróż w czasie")
-        doc = minidom.parse('data.xml')
 
-        docNodes = doc.childNodes
-        for element in docNodes[0].getElementsByTagName("moment"):
-            historyStringPlane = element.toxml().split(' ')
-            historyPlane = self.xmlStringToPlane(historyStringPlane)
-
-
-        self.plane = historyPlane
-        self.planeToGraphics()
-        self.toConsole()
-    def xmlStringToPlane(self,xmlString):
-        row = 0
-        column = 0
-        historyPlane = np.zeros([self.WIDTH,self.HEIGHT])
-        xmlString[0] = xmlString[0][8:]#usuniecie napisu nagłówka
-        for element in xmlString:
-            if row == self.WIDTH-1 and column == self.HEIGHT-1:break#przerwij gdy sczytano wszystkie
-            if column == self.HEIGHT: #jesli kolumna należy do kolejnego rzędu
-                row += 1
-                column = 0
-            historyPlane[row][column] = element
-            column += 1
-        return historyPlane
