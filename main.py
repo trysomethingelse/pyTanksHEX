@@ -33,6 +33,8 @@ class TanksWindow(QDialog):
 
 
     def __init__(self):
+        #przepisywanie ID
+        self.myTank.ID = self.map.AGENT
 
         self.map.generate()
         QMainWindow.__init__(self)
@@ -56,6 +58,7 @@ class TanksWindow(QDialog):
                 self.myTank.position = position
             elif element == self.map.ENEMY:
                 self.myEnemies.append(MovableObject(self.TANK_HEALTH,self.REALISTIC_MOVES_ON))  # dodanie kolejnego obiektu wroga
+                self.myEnemies[enemies].ID = self.map.AGENT+1+enemies #kolejne wartosci id dla wrogów
                 self.myEnemies[enemies].position = position  # przypisz pozycje z mapy do zmiennych w obiekcie
                 enemies += 1
 
@@ -112,10 +115,10 @@ class TanksWindow(QDialog):
 
         self.map.plane[
             self.myTank.oldPos[0], self.myTank.oldPos[1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
-        self.map.plane[self.myTank.position[0], self.myTank.position[1]] = self.map.AGENT  # dodawanie czolgu
+        self.map.plane[self.myTank.position[0], self.myTank.position[1]] = self.map.AGENT_ROT[self.myTank.rotation]  # dodawanie czolgu
 
         self.map.tankRefresh(self.myTank, self.map.MY_TANK)
-
+        self.map.toConsole()
     def randomMove(self):
 
         for index, enemy in enumerate(self.myEnemies):
@@ -146,7 +149,7 @@ class TanksWindow(QDialog):
                     self.map.plane[self.myEnemies[index].oldPos[0], self.myEnemies[index].oldPos[
                         1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
                     self.map.plane[self.myEnemies[index].position[0], self.myEnemies[index].position[
-                        1]] = self.map.ENEMY  # dodawanie czolgu
+                        1]] = self.map.ENEMY_ROT[enemy.rotation]  # dodawanie czolgu
                     # wychodzneie poza mapę----------------------------------------------------------------
                     self.map.tankRefresh(self.myEnemies[index], 0)  # odświeża nową pozycję czołgu
 

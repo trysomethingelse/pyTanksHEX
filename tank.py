@@ -3,6 +3,7 @@ from PyQt5.QtCore import  QTimer
 
 
 class MovableObject:
+    ID = 0
     REALISTIC_MOVES_TIMEOUT = 500
     REALISTIC_MOVES_ON = True
     position = np.array([0, 0])  # pozycja czolgu na mapie

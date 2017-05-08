@@ -19,8 +19,10 @@ class MapGenerator:
 
     ENEMIES = 1
     ENEMY = -10
+    ENEMY_ROT = [-10.0,-10.1,-10.2,-10.3,-10.4,-10.5]
     EMPTY = 0
     AGENT = 10
+    AGENT_ROT = [10.0,10.1,10.2,10.3,10.4,10.5]#rotacja czołgu zapisana w postaci części dzięsiętnych
     DESTR = 9
     NONDESTR = -9
     BULLET = -1
@@ -29,8 +31,6 @@ class MapGenerator:
     pngHEX = None
     startX = 0
     startY = 0
-
-    allow = True
 
     doc = minidom.Document()
     root = doc.createElement("mapHistory")
@@ -55,9 +55,9 @@ class MapGenerator:
         self.plane[4, :7] = np.ones([1, 7]) * self.DESTR  # pas zniszczalnych plytek
         self.plane[3, 0:3] = np.ones([1, 3]) * self.NONDESTR
 
-        self.plane[0, 0] = self.AGENT
-        self.plane[7, 15] = self.ENEMY
-        self.plane[3, 23] = self.ENEMY
+        self.plane[0, 0] = self.AGENT_ROT[0]
+        self.plane[7, 15] = self.ENEMY_ROT[0]
+        # self.plane[3, 23] = self.ENEMY
 
 
 
@@ -152,7 +152,7 @@ class MapGenerator:
 
         planeString = ""
         for index, element in np.ndenumerate(self.plane):
-            planeString += (str(int(element)) + " ")
+            planeString += (str(element) + " ")
         nodeText = self.doc.createTextNode(planeString)
         moment.appendChild(nodeText)
         self.root.appendChild(moment)
@@ -186,7 +186,7 @@ class MapGenerator:
             if column == self.HEIGHT: #jesli kolumna należy do kolejnego rzędu
                 row += 1
                 column = 0
-            historyPlane[row][column] = int(element)
+            historyPlane[row][column] = element
             column += 1
         print(historyPlane)
         return historyPlane
