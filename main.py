@@ -22,8 +22,6 @@ class TanksWindow(QDialog):
     REALISTIC_MOVES_ON = True
     REALISTIC_MOVES_OFF = False
 
-
-
     myTank = MovableObject(TANK_HEALTH,REALISTIC_MOVES_ON)
     myEnemies = []  # tablica wrogów
     bullets = [] #tablica pociskow
@@ -33,9 +31,6 @@ class TanksWindow(QDialog):
 
 
     def __init__(self):
-        #przepisywanie ID
-        self.myTank.ID = self.map.AGENT
-
         self.map.generate()
         QMainWindow.__init__(self)
         self.ui = loadUi('./gui.ui', self)
@@ -54,12 +49,15 @@ class TanksWindow(QDialog):
     def actualizeStatesFromMap(self):  # aktualizuje pozycję obiektów na podstawie rozmieszczenia ich na mapie
         enemies = 0  # liczba wrogów
         for position, element in np.ndenumerate(self.map.plane):
-            if element == self.map.AGENT:
+            if int(element) == self.map.AGENT:
+                self.myTank.oldPos = position
                 self.myTank.position = position
-            elif element == self.map.ENEMY:
+                self.myTank.rotation = int((element%10)*10) #wyłuskanie dziesiętnych części
+            elif int(element) == self.map.ENEMY:
                 self.myEnemies.append(MovableObject(self.TANK_HEALTH,self.REALISTIC_MOVES_ON))  # dodanie kolejnego obiektu wroga
-                self.myEnemies[enemies].ID = self.map.AGENT+1+enemies #kolejne wartosci id dla wrogów
                 self.myEnemies[enemies].position = position  # przypisz pozycje z mapy do zmiennych w obiekcie
+                self.myEnemies[enemies].oldPos = position
+                self.myEnemies[enemies].rotation = int((element%10)*10) #wyłuskanie dziesiętnych części
                 enemies += 1
 
     def drawMap(self):
@@ -93,6 +91,11 @@ class TanksWindow(QDialog):
             self.map.saveDataToXML()
         elif event.key() == Qt.Key_O:  # odtworzenie zapisanej gry
             self.map.readHistory()
+            self.actualizeStatesFromMap()
+            self.map.tankRefresh(self.myTank,self.map.MY_TANK)
+            for enemy in self.myEnemies: self.map.tankRefresh(enemy, self.map.NOT_MY_TANK)  # ładowanie czołgów wroga
+
+
         elif event.key() == Qt.Key_D:
             self.myTank.rotate(1)
         elif event.key() == Qt.Key_X:
@@ -118,7 +121,6 @@ class TanksWindow(QDialog):
         self.map.plane[self.myTank.position[0], self.myTank.position[1]] = self.map.AGENT_ROT[self.myTank.rotation]  # dodawanie czolgu
 
         self.map.tankRefresh(self.myTank, self.map.MY_TANK)
-        self.map.toConsole()
     def randomMove(self):
 
         for index, enemy in enumerate(self.myEnemies):
@@ -170,7 +172,7 @@ class TanksWindow(QDialog):
 
                     onTile = self.map.plane[bullet.position[0], bullet.position[1]]  # co jest na danej plytce
 
-                    if onTile == self.map.ENEMY:
+                    if int(onTile) == self.map.ENEMY:
                         for enemy in self.myEnemies:  # poszukiwanie właściwego wroga w tablicy
                             if enemy.position[0] == bullet.position[0] and enemy.position[1] == bullet.position[1]:
                                 enemy.health -= bullet.health
