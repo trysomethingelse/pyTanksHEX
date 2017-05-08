@@ -172,6 +172,7 @@ class MapGenerator:
             historyStringPlane = element.toxml().split(' ')
             historyPlane = self.xmlStringToPlane(historyStringPlane)
 
+
         self.plane = historyPlane
         self.planeToGraphics()
         self.toConsole()
