@@ -5,7 +5,7 @@ from random import randint
 from mapGenerator import MapGenerator
 from tank import MovableObject
 
-from PyQt5.QtCore import QObject, Qt, QTimer
+from PyQt5.QtCore import QObject, Qt, QTimer,QElapsedTimer
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import *
 from PyQt5 import QtGui, QtCore, QtSvg
@@ -30,6 +30,7 @@ class TanksWindow(QDialog):
     map = MapGenerator()
     randomMoveTimer = QTimer()
     bulletTimer = QTimer()
+    globalTimer = QElapsedTimer() #czas od początku gry
     doc = minidom.Document()
     root = doc.createElement("mapHistory")
 
@@ -50,12 +51,14 @@ class TanksWindow(QDialog):
         self.actualizeStatesFromMap()
         self.drawMap()
 
-        # timer
+        # timery
         self.randomMoveTimer.timeout.connect(self.randomMove)
         self.randomMoveTimer.start(900)
 
         self.bulletTimer.timeout.connect(self.bulletMove)
         self.bulletTimer.start(30)
+
+        self.globalTimer.start()
 
     def actualizeStatesFromMap(self):  # aktualizuje pozycję obiektów na podstawie rozmieszczenia ich na mapie
         enemies = 0  # liczba wrogów
@@ -233,23 +236,14 @@ class TanksWindow(QDialog):
                           newl='\n')
     def addActionToHistory(self,action,tankID):
         moment = self.doc.createElement("moment")
+        moment.setAttribute("time",str(self.globalTimer.elapsed()))
         dataString = str(action) + "," +  str(tankID)
         print(dataString)
         nodeText = self.doc.createTextNode(dataString)
         moment.appendChild(nodeText)
         self.root.appendChild(moment)
         self.doc.appendChild(self.root)
-    # def saveHistory(self):
-    #     moment = self.doc.createElement("moment")
-    #
-    #     dataString = ""
-    #     for index, element in np.ndenumerate(self.plane):
-    #         dataString += (str(element) + " ")
-    #     nodeText = self.doc.createTextNode(planeString)
-    #     moment.appendChild(nodeText)
-    #     self.root.appendChild(moment)
-    #     self.doc.appendChild(self.root)
-    #     self.historyStep += 1
+
     def readHistory(self):
         print("podróż w czasie")
         doc = minidom.parse('data.xml')
