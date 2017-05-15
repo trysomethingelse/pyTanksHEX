@@ -1,5 +1,5 @@
 import numpy as np
-
+from time import sleep
 from random import randint
 
 from mapGenerator import MapGenerator
@@ -107,39 +107,34 @@ class TanksWindow(QDialog):
         elif event.key() == Qt.Key_L:#zapisanie gry
             self.saveDataToXML()
         elif event.key() == Qt.Key_O:  # odtworzenie zapisanej gry
-            self.map.readHistory()
-            self.actualizeStatesFromMap()
-            self.map.tankRefresh(self.myTank,self.map.MY_TANK)
-            for enemy in self.myEnemies: self.map.tankRefresh(enemy, self.map.NOT_MY_TANK)  # ładowanie czołgów wroga
-
-
+            self.readHistory()
         elif event.key() == Qt.Key_D:
             self.myTank.rotate(1)
             self.addActionToHistory(self.RIGHT,self.MY_TANK_ID)
-
-        elif event.key() == Qt.Key_X:
+        elif event.key() == Qt.Key_X:#strzał
             self.bullets.append(MovableObject(self.BULLET_HEALTH,self.REALISTIC_MOVES_OFF))#ustawienie opóźnienia realistycznosci na 0
             self.bullets[-1].position = self.myTank.position  # pozycja pocisku to pozycja czolgu
             self.bullets[-1].rotation = self.myTank.rotation
             self.addActionToHistory(self.SHOOT, self.MY_TANK_ID)
 
-        # wychodzneie czołgu poza mapę
-        if self.myTank.position[0] < 0 or self.myTank.position[1] < 0 or self.myTank.position[1] >= self.map.HEIGHT or \
-                        self.myTank.position[
-                            0] >= self.map.WIDTH:
-            self.myTank.position = self.myTank.oldPos
-
-        onTile = self.map.plane[self.myTank.position[0], self.myTank.position[1]]  # co jest na danej plytce
-
-        # jesli kolizja z przeszkoda
-        if onTile != self.map.EMPTY:
-            self.myTank.position = self.myTank.oldPos
+        self.moveValidation(self.myTank)
 
         self.map.plane[
             self.myTank.oldPos[0], self.myTank.oldPos[1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
         self.map.plane[self.myTank.position[0], self.myTank.position[1]] = self.map.AGENT  # dodawanie czolgu
 
         self.map.tankRefresh(self.myTank, self.map.MY_TANK)
+    def moveValidation(self,tank):
+        # wychodzneie czołgu poza mapę
+        if tank.position[0] < 0 or tank.position[1] < 0 or tank.position[1] >= self.map.HEIGHT or \
+                        tank.position[
+                            0] >= self.map.WIDTH:
+            tank.position = tank.oldPos
+        onTile = self.map.plane[tank.position[0], tank.position[1]]  # co jest na danej plytce
+        # jesli kolizja z przeszkoda
+        if onTile != self.map.EMPTY:
+            tank.position = tank.oldPos
+    
     def randomMove(self):
 
         for index, enemy in enumerate(self.myEnemies):
@@ -237,8 +232,7 @@ class TanksWindow(QDialog):
     def addActionToHistory(self,action,tankID):
         moment = self.doc.createElement("moment")
         moment.setAttribute("time",str(self.globalTimer.elapsed()))
-        dataString = str(action) + "," +  str(tankID)
-        print(dataString)
+        dataString = str(action) + " " +  str(tankID)
         nodeText = self.doc.createTextNode(dataString)
         moment.appendChild(nodeText)
         self.root.appendChild(moment)
@@ -246,30 +240,39 @@ class TanksWindow(QDialog):
 
     def readHistory(self):
         print("podróż w czasie")
+        self.globalTimer.restart()#zerowanie globalnego timera
         doc = minidom.parse('data.xml')
-
         docNodes = doc.childNodes
         for element in docNodes[0].getElementsByTagName("moment"):
-            historyStringPlane = element.toxml().split(' ')
-            historyPlane = self.xmlStringToPlane(historyStringPlane)
+            timeRead = element.attributes["time"]
+            print("Czas: ",timeRead.value)
+            values = element.firstChild.nodeValue#weź tekst pomiędzy znacznikami
+            values = values.split(' ')#rozdziel ten tekst na osobne komórki
+            values[0] = int(values[0])#akcja
+            values[1] = int(values[1])#swój czy wróg
+
+            print("wartosci: ",values)
+
+            while int(self.globalTimer.elapsed()) < int(timeRead.value):#dopóki nie ma czasu który był zapisany w pliku to czekaj na ten czas
+                sleep(0.001)
+            if values[1] == self.MY_TANK_ID:#swój
+                 if values[0] == self.FORWARD: self.myTank.move(1)
+                 elif values[0] == self.BACKWARD: self.myTank.move(-1)
+                 elif values[0] == self.LEFT:
+                     self.myTank.rotate(-1)
+                 elif values[0] == self.RIGHT:
+                     self.myTank.rotate(1)
+                 self.moveValidation(self.myTank)
+                 self.map.plane[
+                    self.myTank.oldPos[0], self.myTank.oldPos[1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
+                 self.map.plane[self.myTank.position[0], self.myTank.position[1]] = self.map.AGENT  # dodawanie czolgu
+
+                 self.myTank.position = [3,3]
+                 self.map.tankRefresh(self.myTank, self.map.MY_TANK)
+                 self.mapScene.update()
+                 self.ui.graphicsView.update()
 
 
-        self.plane = historyPlane
-        self.planeToGraphics()
-        self.toConsole()
-    def xmlStringToPlane(self,xmlString):
-        row = 0
-        column = 0
-        historyPlane = np.zeros([self.WIDTH,self.HEIGHT])
-        xmlString[0] = xmlString[0][8:]#usuniecie napisu nagłówka
-        for element in xmlString:
-            if row == self.WIDTH-1 and column == self.HEIGHT-1:break#przerwij gdy sczytano wszystkie
-            if column == self.HEIGHT: #jesli kolumna należy do kolejnego rzędu
-                row += 1
-                column = 0
-            historyPlane[row][column] = element
-            column += 1
-        return historyPlane
 
 if (__name__ == "__main__"):
     qApp = QApplication(sys.argv)
