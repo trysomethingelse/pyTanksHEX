@@ -12,7 +12,9 @@ from PyQt5 import QtGui, QtCore
 from xml.dom import minidom
 
 import sys
-
+import socket
+import _thread
+import time
 
 class TanksWindow(QDialog):
     WINDOW_WIDTH = 620
@@ -43,7 +45,7 @@ class TanksWindow(QDialog):
 
 
 
-    def __init__(self):
+    def __init__(self,sendTcp):
         self.map.generate()
         QMainWindow.__init__(self)
         self.ui = loadUi('./gui.ui', self)
@@ -274,7 +276,52 @@ class TanksWindow(QDialog):
                  self.mapScene.update()
                  self.ui.graphicsView.update()
 
-class TcpThread(QThread):
+class ServerThread(QThread):
+    toSend = "wysylanie"
+    TCP_IP = '153.19.54.16'
+    TCP_PORT = 50002
+    BUFFER_SIZE = 1024
+
+    def __init__(self,mainApp):
+        QThread.__init__(self)
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+
+        sRx = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sRx.bind((self.TCP_IP, self.TCP_PORT))
+        sRx.listen(1)
+
+        while 1:
+            self.server(sRx)
+            pass
+
+    def server(self,s):
+        print("Wątek serwera działa!")
+        conn, addr = s.accept()
+        print("Connection address:", addr)
+        while 1:
+            data = conn.recv(self.BUFFER_SIZE)
+            if not data: break
+            print("received data:", data.decode())
+
+        conn.close()
+
+    def send(data):
+        TCP_IP_SEND = '153.19.215.253'
+        TCP_PORT_SEND = 50002
+        print("wysylanie")
+        sTx = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sTx.connect((TCP_IP_SEND, TCP_PORT_SEND))
+        for elem in data:
+            sTx.send(str.encode(elem))
+            time.sleep(2)
+
+
+class SendThread(QThread):
+
     def __init__(self):
         QThread.__init__(self)
 
@@ -282,18 +329,29 @@ class TcpThread(QThread):
         self.wait()
 
     def run(self):
-        while True:
-            print("hi")
+        TCP_IP_SEND = '153.19.215.253'
+        TCP_PORT_SEND = 50002
+        data = "wysylanie"
+        print("Wątek wysyłania działa!")
+
+        sTx = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sTx.connect((TCP_IP_SEND, TCP_PORT_SEND))
+        sTx.send(str.encode(data))
+        time.sleep(2)
 
 
 if (__name__ == "__main__"):
 
-    tcpThread = TcpThread()
-    tcpThread.start()
+
+    sendThread = SendThread()
+    sendThread.start()
 
     qApp = QApplication(sys.argv)
-    app = TanksWindow()
-    # app.map.toConsole()
+    app = TanksWindow(sendThread)
+
+    serverThread = ServerThread(app)
+    serverThread.start()
+
     app.show()
     sys.exit(qApp.exec_())
 
