@@ -35,6 +35,7 @@ class TanksWindow(QDialog):
     globalTimer = QElapsedTimer() #czas od początku gry
     doc = minidom.Document()
     root = doc.createElement("mapHistory")
+    sendThread = None
 
     #akcje:
     FORWARD = 1
@@ -62,6 +63,7 @@ class TanksWindow(QDialog):
         self.bulletTimer.start(30)
 
         self.globalTimer.start()
+        self.sendThread = sendTcp #interfejs do wysyłania wiadomości na świat
 
 
     def actualizeStatesFromMap(self):  # aktualizuje pozycję obiektów na podstawie rozmieszczenia ich na mapie
@@ -234,6 +236,8 @@ class TanksWindow(QDialog):
                           addindent="  ",
                           newl='\n')
     def addActionToHistory(self,action,tankID):
+        self.sendThread.sendMessage(str(action)+","+str(tankID))#wysyła wykonany ruch w sieć
+
         moment = self.doc.createElement("moment")
         moment.setAttribute("time",str(self.globalTimer.elapsed()))
         dataString = str(action) + " " +  str(tankID)
@@ -241,6 +245,7 @@ class TanksWindow(QDialog):
         moment.appendChild(nodeText)
         self.root.appendChild(moment)
         self.doc.appendChild(self.root)
+
 
     def readHistory(self):
         print("podróż w czasie")
@@ -278,7 +283,7 @@ class TanksWindow(QDialog):
 
 class ServerThread(QThread):
     toSend = "wysylanie"
-    TCP_IP = '153.19.54.16'
+    TCP_IP = '153.19.215.253'
     TCP_PORT = 50002
     BUFFER_SIZE = 1024
 
@@ -321,24 +326,29 @@ class ServerThread(QThread):
 
 
 class SendThread(QThread):
+    TCP_IP_SEND = '153.19.215.253'
+    TCP_PORT_SEND = 50002
+    sTx = None
 
     def __init__(self):
         QThread.__init__(self)
+
+
 
     def __del__(self):
         self.wait()
 
     def run(self):
-        TCP_IP_SEND = '153.19.215.253'
-        TCP_PORT_SEND = 50002
-        data = "wysylanie"
+
+        # self.sTx = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sTx = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sTx.connect((self.TCP_IP_SEND,self.TCP_PORT_SEND))
         print("Wątek wysyłania działa!")
+        while True:
+            pass
 
-        sTx = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sTx.connect((TCP_IP_SEND, TCP_PORT_SEND))
-        sTx.send(str.encode(data))
-        time.sleep(2)
-
+    def sendMessage(self,message):
+        self.sTx.send(str.encode(message))
 
 if (__name__ == "__main__"):
 
