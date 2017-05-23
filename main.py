@@ -16,6 +16,8 @@ import socket
 import _thread
 import time
 
+
+
 class TanksWindow(QDialog):
     WINDOW_WIDTH = 620
     WINDOW_HEIGHT = 620
@@ -37,6 +39,7 @@ class TanksWindow(QDialog):
     root = doc.createElement("mapHistory")
     sendThread = None
 
+
     #akcje:
     FORWARD = 1
     BACKWARD = 2
@@ -47,6 +50,8 @@ class TanksWindow(QDialog):
 
 
     def __init__(self,sendTcp):
+        # while gamePause:
+        #     pass
         self.map.generate()
         QMainWindow.__init__(self)
         self.ui = loadUi('./gui.ui', self)
@@ -236,7 +241,8 @@ class TanksWindow(QDialog):
                           addindent="  ",
                           newl='\n')
     def addActionToHistory(self,action,tankID):
-        self.sendThread.sendMessage(str(action)+","+str(tankID))#wysyła wykonany ruch w sieć
+        if self.sendThread.connected:
+            self.sendThread.sendMessage(str(action)+","+str(tankID))#wysyła wykonany ruch w sieć
 
         moment = self.doc.createElement("moment")
         moment.setAttribute("time",str(self.globalTimer.elapsed()))
@@ -283,8 +289,8 @@ class TanksWindow(QDialog):
 
 class ServerThread(QThread):
     toSend = "wysylanie"
-    TCP_IP = '153.19.215.253'
-    TCP_PORT = 50002
+    TCP_IP = '127.0.0.1'#''153.19.215.253'
+    TCP_PORT = 50001
     BUFFER_SIZE = 1024
 
     def __init__(self,mainApp):
@@ -315,8 +321,8 @@ class ServerThread(QThread):
         conn.close()
 
     def send(data):
-        TCP_IP_SEND = '153.19.215.253'
-        TCP_PORT_SEND = 50002
+        TCP_IP_SEND = '127.0.0.1'#'153.19.215.253'
+        TCP_PORT_SEND = 50001
         print("wysylanie")
         sTx = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sTx.connect((TCP_IP_SEND, TCP_PORT_SEND))
@@ -326,9 +332,10 @@ class ServerThread(QThread):
 
 
 class SendThread(QThread):
-    TCP_IP_SEND = '153.19.215.253'
+    TCP_IP_SEND = '127.0.0.1'#'153.19.215.253'
     TCP_PORT_SEND = 50002
     sTx = None
+    connected = False
 
     def __init__(self):
         QThread.__init__(self)
@@ -342,7 +349,13 @@ class SendThread(QThread):
 
         # self.sTx = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sTx = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sTx.connect((self.TCP_IP_SEND,self.TCP_PORT_SEND))
+
+        while not self.connected:
+            try:
+                self.sTx.connect((self.TCP_IP_SEND, self.TCP_PORT_SEND))
+                self.connected = True
+            except Exception as e:
+                pass
         print("Wątek wysyłania działa!")
         while True:
             pass
