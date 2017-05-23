@@ -38,6 +38,7 @@ class TanksWindow(QDialog):
     doc = minidom.Document()
     root = doc.createElement("mapHistory")
     sendThread = None
+    gameStart = False
 
 
     #akcje:
@@ -50,8 +51,6 @@ class TanksWindow(QDialog):
 
 
     def __init__(self,sendTcp):
-        # while gamePause:
-        #     pass
         self.map.generate()
         QMainWindow.__init__(self)
         self.ui = loadUi('./gui.ui', self)
@@ -241,6 +240,8 @@ class TanksWindow(QDialog):
                           addindent="  ",
                           newl='\n')
     def addActionToHistory(self,action,tankID):
+        # while not self.gameStart:
+        #     pass
         if self.sendThread.connected:
             self.sendThread.sendMessage(str(action)+","+str(tankID))#wysyła wykonany ruch w sieć
 
@@ -292,8 +293,10 @@ class ServerThread(QThread):
     TCP_IP = '127.0.0.1'#''153.19.215.253'
     TCP_PORT = 50001
     BUFFER_SIZE = 1024
+    mainApp = None
 
     def __init__(self,mainApp):
+        self.mainApp = mainApp
         QThread.__init__(self)
 
     def __del__(self):
@@ -317,7 +320,8 @@ class ServerThread(QThread):
             data = conn.recv(self.BUFFER_SIZE)
             if not data: break
             print("received data:", data.decode())
-
+            if data == "start1":
+                self.mainApp.gameStart = True
         conn.close()
 
     def send(data):
@@ -357,6 +361,7 @@ class SendThread(QThread):
             except Exception as e:
                 pass
         print("Wątek wysyłania działa!")
+        self.sendMessage("start1")#wystartuj aplikację przeciwnika
         while True:
             pass
 
@@ -365,15 +370,16 @@ class SendThread(QThread):
 
 if (__name__ == "__main__"):
 
-
+    app = None
     sendThread = SendThread()
     sendThread.start()
+
+    serverThread = ServerThread(app)
+    serverThread.start()
 
     qApp = QApplication(sys.argv)
     app = TanksWindow(sendThread)
 
-    serverThread = ServerThread(app)
-    serverThread.start()
 
     app.show()
     sys.exit(qApp.exec_())
