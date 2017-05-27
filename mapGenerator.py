@@ -50,8 +50,10 @@ class MapGenerator:
         print("map init")
 
     def generate(self):
-        self.plane[4, :7] = np.ones([1, 7]) * self.DESTR  # pas zniszczalnych plytek
-        self.plane[3, 0:3] = np.ones([1, 3]) * self.NONDESTR
+        self.plane[0::2, 1::3] = np.ones([4,8]) * self.DESTR  # pas zniszczalnych plytek
+        # self.plane[4, :28] = np.ones([1, 7]) * self.DESTR  # pas zniszczalnych plytek
+        self.plane[0::3, 0::3] = np.ones([3, 8]) * self.NONDESTR
+        self.plane[1::3, 0::4] = np.ones([3, 6]) * self.NONDESTR
 
         self.plane[0, 0] = self.AGENT
         self.plane[7, 15] = self.ENEMY

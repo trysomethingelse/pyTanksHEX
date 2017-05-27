@@ -61,7 +61,7 @@ class TanksWindow(QDialog):
 
         # timery
         self.randomMoveTimer.timeout.connect(self.randomMove)
-        self.randomMoveTimer.start(900)
+        self.randomMoveTimer.start(200)
 
         self.bulletTimer.timeout.connect(self.bulletMove)
         self.bulletTimer.start(30)
@@ -151,9 +151,9 @@ class TanksWindow(QDialog):
             if enemy.health > 0:  # gdy przeciwnik jeszcze żyje
                 self.myEnemies[index].oldPos = self.myEnemies[index].position  # przepisuje starą pozycje
 
-                #losowanie ruchi
-
-                if randint(1, 10) > 3: #obrót
+                #losowanie ruchu
+                rand = randint(1, 10)
+                if  rand > 4: #obrót
                     rotation = randint(-1,1)
                     rotationDone = self.LEFT #potrzebne do przekazania odpowiedniego obrotu do XML
                     self.myEnemies[index].rotate(rotation)
@@ -161,6 +161,12 @@ class TanksWindow(QDialog):
                     elif rotation == 1: rotationDone = self.RIGHT
                     if rotation != 0 : #jesli wykonano jakikolwiek obrot to go zapisz do XML
                         self.addActionToHistory(rotationDone,index)
+                elif rand == 4:
+                    self.bullets.append(MovableObject(self.BULLET_HEALTH,
+                                                      self.REALISTIC_MOVES_OFF))  # ustawienie opóźnienia realistycznosci na 0
+                    self.bullets[-1].position = self.myEnemies[index].position  # pozycja pocisku to pozycja czolgu
+                    self.bullets[-1].rotation = self.myEnemies[index].rotation
+                    self.addActionToHistory(self.SHOOT, index)
                 else: #ruch w przód lub tył
                     direction = randint(0, 7)
                     moveDone = self.FORWARD#potrzebne do przekazania odpowiedniego ruchu do XML
