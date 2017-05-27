@@ -25,23 +25,25 @@ class MovableObject:
         self.REALISTIC_MOVES_ON = realisticMovesOn
 
     def rotate(self, value):  # value 1 prawo, -1 lewo
-        if not self.blockMotion:
-            self.rotation += value
-            if (self.rotation < 0): self.rotation = 5  # przekrecenie na drugą stronę
-            self.rotation %= 6
-            if self.REALISTIC_MOVES_ON: self.blockMotion = True
+        if self.health > 0:
+            if not self.blockMotion:
+                self.rotation += value
+                if (self.rotation < 0): self.rotation = 5  # przekrecenie na drugą stronę
+                self.rotation %= 6
+                if self.REALISTIC_MOVES_ON: self.blockMotion = True
 
     def move(self, direction):  # direction 1-przód, -1 tył
-        if not self.blockMotion:
-            if direction == -1:
-                self.rotate(3)  # rotacja w przeciwna strone gdy cofanie
-                self.blockMotion = False #odblokowanie możliwości natychmiastowego skrętu, zablokowana po pierwszym skrecie
-            if self.position[1] % 2 == 0:  # dla parzystych wierszy
-                self.position = np.add(self.position, self.availableMoveForEven[self.rotation])
-            else:
-                self.position = np.add(self.position, self.availableMoveForOdd[self.rotation])
-            if direction == -1: self.rotate(3)  # przywrócenie poczatkowego ustawienia dla cofania
-            if self.REALISTIC_MOVES_ON: self.blockMotion = True
+        if self.health > 0:
+            if not self.blockMotion:
+                if direction == -1:
+                    self.rotate(3)  # rotacja w przeciwna strone gdy cofanie
+                    self.blockMotion = False #odblokowanie możliwości natychmiastowego skrętu, zablokowana po pierwszym skrecie
+                if self.position[1] % 2 == 0:  # dla parzystych wierszy
+                    self.position = np.add(self.position, self.availableMoveForEven[self.rotation])
+                else:
+                    self.position = np.add(self.position, self.availableMoveForOdd[self.rotation])
+                if direction == -1: self.rotate(3)  # przywrócenie poczatkowego ustawienia dla cofania
+                if self.REALISTIC_MOVES_ON: self.blockMotion = True
 
     def realisticMoves(self):
         self.blockMotion = False

@@ -2,6 +2,8 @@ import numpy as np
 from time import sleep
 from random import randint
 
+from docutils.nodes import bullet_list
+
 from mapGenerator import MapGenerator
 from tank import MovableObject
 
@@ -126,14 +128,14 @@ class TanksWindow(QDialog):
             self.bullets[-1].position = self.myTank.position  # pozycja pocisku to pozycja czolgu
             self.bullets[-1].rotation = self.myTank.rotation
             self.addActionToHistory(self.SHOOT, self.MY_TANK_ID)
+        if self.myTank.health > 0 :
+            self.moveValidation(self.myTank)
 
-        self.moveValidation(self.myTank)
+            self.map.plane[
+                self.myTank.oldPos[0], self.myTank.oldPos[1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
+            self.map.plane[self.myTank.position[0], self.myTank.position[1]] = self.map.AGENT  # dodawanie czolgu
 
-        self.map.plane[
-            self.myTank.oldPos[0], self.myTank.oldPos[1]] = self.map.EMPTY  # usuwanie czolgu ze starej pozycji
-        self.map.plane[self.myTank.position[0], self.myTank.position[1]] = self.map.AGENT  # dodawanie czolgu
-
-        self.map.tankRefresh(self.myTank, self.map.MY_TANK)
+            self.map.tankRefresh(self.myTank, self.map.MY_TANK)
     def moveValidation(self,tank):
         # wychodzneie czołgu poza mapę
         if tank.position[0] < 0 or tank.position[1] < 0 or tank.position[1] >= self.map.HEIGHT or \
@@ -224,7 +226,12 @@ class TanksWindow(QDialog):
                                     self.map.plane[bullet.position[0], bullet.position[1]] = self.map.EMPTY
                                     self.map.tileRefresh(bullet.position, self.map.EMPTY)  # usuwanie pocisku z mapy
                         self.bullets.pop(index)
-
+                    elif onTile == self.map.AGENT:
+                        self.myTank.health -= bullet.health
+                        if self.myTank.health <= 0:  # jesli nie mam punktów życia
+                            self.map.plane[bullet.position[0], bullet.position[1]] = self.map.EMPTY
+                            self.map.tileRefresh(bullet.position, self.map.EMPTY)  # usuwanie pocisku z mapy
+                        self.bullets.pop(index)
                     elif onTile == self.map.DESTR:
                         self.map.plane[bullet.position[0], bullet.position[1]] = self.map.EMPTY
                         self.map.tileRefresh(bullet.position, self.map.EMPTY)  # usuwanie pocisku z mapy z miejsca ściany
