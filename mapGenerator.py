@@ -26,6 +26,7 @@ class MapGenerator:
     BULLET = -1
 
     plane = np.zeros([WIDTH, HEIGHT])
+    startPlane = plane
     pngHEX = None
     startX = 0
     startY = 0
@@ -57,6 +58,7 @@ class MapGenerator:
 
         self.plane[0, 0] = self.AGENT
         self.plane[7, 15] = self.ENEMY
+        self.startPlane = self.plane #kopia mapy - start
         # self.plane[3, 23] = self.ENEMY
 
     def toConsole(self):

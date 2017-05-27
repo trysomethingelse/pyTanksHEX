@@ -37,12 +37,15 @@ class TanksWindow(QDialog):
     map = MapGenerator()
     randomMoveTimer = QTimer()
     bulletTimer = QTimer()
+    actualizeTCPTimer = QTimer()
     globalTimer = QElapsedTimer() #czas od początku gry
     doc = minidom.Document()
     root = doc.createElement("mapHistory")
     sendThread = None
     gameStart = False
     appNo = None
+    changeState = False
+    newPosition = None
 
 
     #akcje:
@@ -67,6 +70,9 @@ class TanksWindow(QDialog):
         # timery
         self.randomMoveTimer.timeout.connect(self.randomMove)
         self.randomMoveTimer.start(200)
+
+        # self.actualizeTCPTimer.timeout.connect(self.actualizeTCP)
+        # self.actualizeTCPTimer.start(100)
 
         self.bulletTimer.timeout.connect(self.bulletMove)
         self.bulletTimer.start(30)
@@ -269,10 +275,10 @@ class TanksWindow(QDialog):
                           addindent="  ",
                           newl='\n')
     def addActionToHistory(self,action,tankID):
-        # while not self.gameStart:
-        #     pass
+
         if self.sendThread.connected:
-            self.sendThread.sendMessage(str(action)+","+str(tankID))#wysyła wykonany ruch w sieć
+            self.sendThread.sendMessage(str(self.myTank.position))#wysyła obecna pozycje w siec
+
 
         moment = self.doc.createElement("moment")
         moment.setAttribute("time",str(self.globalTimer.elapsed()))
@@ -316,6 +322,18 @@ class TanksWindow(QDialog):
                  self.map.tankRefresh(self.myTank, self.map.MY_TANK)
                  self.mapScene.update()
                  self.ui.graphicsView.update()
+    def actualizeTCP(self):
+        if self.changeState:
+
+        # for index, enemy in enumerate(self.myEnemies):
+        #     if enemy.health > 0:  # gdy przeciwnik jeszcze żyje
+            print("aktualizacja:",self.newPosition)
+            self.changeState = False
+                # self.myEnemies[index].position = data
+
+
+
+
 
 class ServerThread(QThread):
     toSend = ""
@@ -353,6 +371,9 @@ class ServerThread(QThread):
             print("received data:", data.decode())
             if data == "start1":
                 self.mainApp.gameStart = True
+            # else:
+            #     self.mainApp.changeState = True
+            #     self.mainApp.newPostion = data.decode()
         conn.close()
 
     def send(self,data):
@@ -406,7 +427,7 @@ if (__name__ == "__main__"):
 
     TCP_PORT_0 = 50001
     TCP_PORT_1 = 50002
-    appNo = 1    #w zależności od numeru aplikacji port jest inny
+    appNo = 0   #w zależności od numeru aplikacji port jest inny
 
     if appNo == 0 :
         TCP_PORT_SERVER = TCP_PORT_0
