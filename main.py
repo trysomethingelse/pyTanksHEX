@@ -30,6 +30,7 @@ class TanksWindow(QDialog):
     REALISTIC_MOVES_OFF = False
     MY_TANK_ID = 1000
 
+
     myTank = MovableObject(TANK_HEALTH,REALISTIC_MOVES_ON)
     myEnemies = []  # tablica wrogów
     bullets = [] #tablica pociskow
@@ -302,13 +303,15 @@ class TanksWindow(QDialog):
                  self.ui.graphicsView.update()
 
 class ServerThread(QThread):
-    toSend = "wysylanie"
-    TCP_IP = '127.0.0.1'#''153.19.215.253'
-    TCP_PORT = 50001
+    toSend = ""
+    TCP_IP = None
+    TCP_PORT = None
     BUFFER_SIZE = 1024
     mainApp = None
 
-    def __init__(self,mainApp):
+    def __init__(self,TCP_IP,TCP_PORT,mainApp):
+        self.TCP_IP = TCP_IP
+        self.TCP_PORT = TCP_PORT
         self.mainApp = mainApp
         QThread.__init__(self)
 
@@ -337,24 +340,24 @@ class ServerThread(QThread):
                 self.mainApp.gameStart = True
         conn.close()
 
-    def send(data):
-        TCP_IP_SEND = '127.0.0.1'#'153.19.215.253'
-        TCP_PORT_SEND = 50001
+    def send(self,data):
         print("wysylanie")
         sTx = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sTx.connect((TCP_IP_SEND, TCP_PORT_SEND))
+        sTx.connect((self.TCP_IP_SEND, self.TCP_PORT_SEND))
         for elem in data:
             sTx.send(str.encode(elem))
             time.sleep(2)
 
 
 class SendThread(QThread):
-    TCP_IP_SEND = '127.0.0.1'#'153.19.215.253'
-    TCP_PORT_SEND = 50002
+    TCP_IP = None
+    TCP_PORT = None
     sTx = None
     connected = False
 
-    def __init__(self):
+    def __init__(self,TCP_IP,TCP_PORT):
+        self.TCP_IP = TCP_IP
+        self.TCP_PORT = TCP_PORT
         QThread.__init__(self)
 
 
@@ -363,13 +366,11 @@ class SendThread(QThread):
         self.wait()
 
     def run(self):
-
-        # self.sTx = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sTx = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         while not self.connected:
             try:
-                self.sTx.connect((self.TCP_IP_SEND, self.TCP_PORT_SEND))
+                self.sTx.connect((self.TCP_IP, self.TCP_PORT))
                 self.connected = True
             except Exception as e:
                 pass
@@ -384,10 +385,29 @@ class SendThread(QThread):
 if (__name__ == "__main__"):
 
     app = None
-    sendThread = SendThread()
+    TCP_IP = '127.0.0.1'
+    TCP_PORT_SERVER = None
+    TCP_PORT_SEND = None
+
+    TCP_PORT_0 = 50001
+    TCP_PORT_1 = 50002
+    appNo = 0    #w zależności od numeru aplikacji port jest inny
+
+    if appNo == 0 :
+        TCP_PORT_SERVER = TCP_PORT_0
+        TCP_PORT_SEND = TCP_PORT_1
+    elif appNo == 1:
+        TCP_PORT_SERVER = TCP_PORT_1
+        TCP_PORT_SEND = TCP_PORT_0
+
+
+
+
+
+    sendThread = SendThread(TCP_IP,TCP_PORT_SEND)
     sendThread.start()
 
-    serverThread = ServerThread(app)
+    serverThread = ServerThread(TCP_IP,TCP_PORT_SERVER,app)
     serverThread.start()
 
     qApp = QApplication(sys.argv)
