@@ -42,6 +42,7 @@ class TanksWindow(QDialog):
     root = doc.createElement("mapHistory")
     sendThread = None
     gameStart = False
+    appNo = None
 
 
     #akcje:
@@ -53,7 +54,8 @@ class TanksWindow(QDialog):
 
 
 
-    def __init__(self,sendTcp):
+    def __init__(self,sendTcp,appNo):
+        self.appNo =  appNo
         self.map.generate()
         QMainWindow.__init__(self)
         self.ui = loadUi('./gui.ui', self)
@@ -77,15 +79,28 @@ class TanksWindow(QDialog):
         enemies = 0  # liczba wrogów
         for position, element in np.ndenumerate(self.map.plane):
             if int(element) == self.map.AGENT:
-                self.myTank.oldPos = position
-                self.myTank.position = position
-                self.myTank.rotation = int((element%10)*10) #wyłuskanie dziesiętnych części
+                if self.appNo == 0:
+                    self.myTank.oldPos = position
+                    self.myTank.position = position
+                    self.myTank.rotation = int((element%10)*10) #wyłuskanie dziesiętnych części
+                elif self.appNo == 1:
+                    self.myEnemies.append(
+                        MovableObject(self.TANK_HEALTH, self.REALISTIC_MOVES_ON))  # dodanie kolejnego obiektu wroga
+                    self.myEnemies[enemies].position = position  # przypisz pozycje z mapy do zmiennych w obiekcie
+                    self.myEnemies[enemies].oldPos = position
+                    self.myEnemies[enemies].rotation = int((element % 10) * 10)  # wyłuskanie dziesiętnych części
+                    enemies += 1
             elif int(element) == self.map.ENEMY:
-                self.myEnemies.append(MovableObject(self.TANK_HEALTH,self.REALISTIC_MOVES_ON))  # dodanie kolejnego obiektu wroga
-                self.myEnemies[enemies].position = position  # przypisz pozycje z mapy do zmiennych w obiekcie
-                self.myEnemies[enemies].oldPos = position
-                self.myEnemies[enemies].rotation = int((element%10)*10) #wyłuskanie dziesiętnych części
-                enemies += 1
+                if self.appNo == 0:
+                    self.myEnemies.append(MovableObject(self.TANK_HEALTH,self.REALISTIC_MOVES_ON))  # dodanie kolejnego obiektu wroga
+                    self.myEnemies[enemies].position = position  # przypisz pozycje z mapy do zmiennych w obiekcie
+                    self.myEnemies[enemies].oldPos = position
+                    self.myEnemies[enemies].rotation = int((element%10)*10) #wyłuskanie dziesiętnych części
+                    enemies += 1
+                elif self.appNo == 1:
+                    self.myTank.oldPos = position
+                    self.myTank.position = position
+                    self.myTank.rotation = int((element % 10) * 10)  # wyłuskanie dziesiętnych części
 
     def drawMap(self):
         [startX, startY] = [-self.WINDOW_WIDTH / 2, -self.WINDOW_HEIGHT / 2]
@@ -391,7 +406,7 @@ if (__name__ == "__main__"):
 
     TCP_PORT_0 = 50001
     TCP_PORT_1 = 50002
-    appNo = 0    #w zależności od numeru aplikacji port jest inny
+    appNo = 1    #w zależności od numeru aplikacji port jest inny
 
     if appNo == 0 :
         TCP_PORT_SERVER = TCP_PORT_0
@@ -411,7 +426,7 @@ if (__name__ == "__main__"):
     serverThread.start()
 
     qApp = QApplication(sys.argv)
-    app = TanksWindow(sendThread)
+    app = TanksWindow(sendThread,appNo)
 
 
     app.show()
